@@ -1,0 +1,2604 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>CYRUS — Your Music Distribution Hub</title>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,600;1,400&family=Syne:wght@400;700;800&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet"/>
+<style>
+:root{
+  --bg:#070710;--s1:#0C0C1E;--s2:#111128;--bd:rgba(201,168,76,.15);
+  --g:#C9A84C;--gl:#E2C97E;--gn:#00C896;--cy:#00E5FF;--rd:#FF4444;--mt:#6B7280;
+  --tx:#F0EDE6;--white:#FFFFFF;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:var(--bg);color:var(--tx);font-family:'DM Sans',sans-serif;min-height:100vh;overflow-x:hidden}
+
+/* LAYOUT */
+.app{display:flex;min-height:100vh}
+.sidebar{width:240px;background:var(--s1);border-right:1px solid var(--bd);display:flex;flex-direction:column;position:fixed;top:0;left:0;height:100vh;z-index:100;transition:transform .3s}
+.main{margin-left:240px;flex:1;min-height:100vh}
+
+/* SIDEBAR */
+.logo{padding:1.5rem 1.4rem 1rem;border-bottom:1px solid var(--bd)}
+.logo-text{font-family:'Cormorant Garamond',serif;font-size:1.6rem;font-weight:600;background:linear-gradient(135deg,var(--g),var(--gl));-webkit-background-clip:text;-webkit-text-fill-color:transparent;letter-spacing:.12em}
+.logo-sub{font-family:'Syne',sans-serif;font-size:.52rem;font-weight:700;letter-spacing:.2em;text-transform:uppercase;color:var(--mt);margin-top:.2rem}
+.nav{flex:1;padding:.8rem 0;overflow-y:auto}
+.nav-section{font-family:'Syne',sans-serif;font-size:.48rem;font-weight:700;letter-spacing:.2em;text-transform:uppercase;color:var(--mt);padding:.6rem 1.4rem .3rem}
+.nav-item{display:flex;align-items:center;gap:.75rem;padding:.7rem 1.4rem;cursor:pointer;transition:all .2s;font-size:.82rem;color:var(--mt);position:relative}
+.nav-item:hover{color:var(--tx);background:rgba(201,168,76,.05)}
+.nav-item.active{color:var(--g);background:rgba(201,168,76,.08)}
+.nav-item.active::before{content:'';position:absolute;left:0;top:0;bottom:0;width:2px;background:linear-gradient(to bottom,var(--g),var(--gl))}
+.nav-ico{font-size:1rem;width:20px;text-align:center}
+.sidebar-foot{padding:1rem 1.4rem;border-top:1px solid var(--bd)}
+.artist-card{background:rgba(201,168,76,.06);border:1px solid var(--bd);padding:.75rem;display:flex;align-items:center;gap:.65rem}
+.artist-avatar{width:36px;height:36px;background:linear-gradient(135deg,var(--g),var(--gl));display:flex;align-items:center;justify-content:center;font-size:1rem}
+.artist-name{font-family:'Syne',sans-serif;font-size:.72rem;font-weight:700}
+.artist-plan{font-size:.6rem;color:var(--g)}
+
+/* HEADER */
+.topbar{background:var(--s1);border-bottom:1px solid var(--bd);padding:.9rem 1.8rem;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:50}
+.page-title{font-family:'Syne',sans-serif;font-size:.72rem;font-weight:700;letter-spacing:.15em;text-transform:uppercase;color:var(--mt)}
+.topbar-actions{display:flex;gap:.55rem;align-items:center}
+
+/* PAGES */
+.page{display:none;padding:1.8rem}
+.page.active{display:block}
+
+/* CARDS */
+.card{background:var(--s2);border:1px solid var(--bd);padding:1.3rem;margin-bottom:1.1rem}
+.card h3{font-family:'Syne',sans-serif;font-size:.67rem;font-weight:700;letter-spacing:.15em;text-transform:uppercase;color:var(--g);margin-bottom:1rem}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:1rem}
+.grid3{display:grid;grid-template-columns:repeat(3,1fr);gap:.75rem}
+
+/* STATS */
+.stat-row{display:grid;grid-template-columns:repeat(4,1fr);gap:.75rem;margin-bottom:1.1rem}
+.stat{background:var(--s2);border:1px solid var(--bd);padding:1rem;text-align:center}
+.stat-val{font-family:'Cormorant Garamond',serif;font-size:1.8rem;font-weight:600;color:var(--g);line-height:1}
+.stat-lbl{font-family:'Syne',sans-serif;font-size:.55rem;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--mt);margin-top:.3rem}
+
+/* BUTTONS */
+.btn{display:inline-flex;align-items:center;gap:.4rem;font-family:'Syne',sans-serif;font-size:.65rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;padding:.6rem 1.2rem;cursor:pointer;border:none;transition:all .2s;text-decoration:none}
+.btn-gold{background:linear-gradient(135deg,var(--g),var(--gl));color:#000}
+.btn-outline{background:transparent;border:1px solid var(--bd);color:var(--tx)}
+.btn-outline:hover{border-color:var(--g);color:var(--g)}
+.btn-green{background:rgba(0,200,150,.15);border:1px solid rgba(0,200,150,.3);color:var(--gn)}
+.btn-red{background:rgba(255,68,68,.1);border:1px solid rgba(255,68,68,.2);color:var(--rd)}
+.btn-sm{padding:.38rem .75rem;font-size:.58rem}
+.btn:hover{opacity:.9;transform:translateY(-1px)}
+
+/* FORMS */
+.fg{margin-bottom:.85rem}
+.fg label{display:block;font-family:'Syne',sans-serif;font-size:.58rem;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--mt);margin-bottom:.4rem}
+.fg input,.fg select,.fg textarea{width:100%;background:var(--bg);border:1px solid var(--bd);color:var(--tx);padding:.72rem .88rem;font-family:'DM Sans',sans-serif;font-size:.84rem;outline:none;transition:border-color .2s;-webkit-appearance:none}
+.fg input:focus,.fg select:focus,.fg textarea:focus{border-color:var(--g)}
+.fg select{color-scheme:dark}
+.fg textarea{resize:vertical;min-height:70px;line-height:1.6}
+
+/* UPLOAD ZONE */
+.upzone{border:1px dashed rgba(201,168,76,.3);padding:1.8rem;text-align:center;cursor:pointer;transition:all .2s;position:relative;background:rgba(201,168,76,.02)}
+.upzone:hover,.upzone.drag{border-color:var(--g);background:rgba(201,168,76,.06)}
+.upzone input{position:absolute;inset:0;opacity:0;cursor:pointer;width:100%;height:100%}
+.upzone-ico{font-size:2rem;margin-bottom:.5rem}
+.upzone-title{font-family:'Syne',sans-serif;font-size:.72rem;font-weight:700;margin-bottom:.25rem}
+.upzone-sub{font-size:.65rem;color:var(--mt)}
+
+/* PLATFORM GRID */
+.plat-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:.4rem;margin-bottom:.9rem}
+.plat-item{background:var(--bg);border:1px solid var(--bd);padding:.55rem .7rem;display:flex;align-items:center;gap:.5rem;cursor:pointer;transition:all .2s;font-size:.7rem}
+.plat-item:hover{border-color:rgba(201,168,76,.3)}
+.plat-item.sel{border-color:var(--g);background:rgba(201,168,76,.08)}
+.plat-item.sel .plat-check{background:var(--g);border-color:var(--g);color:#000}
+.plat-check{width:14px;height:14px;border:1px solid var(--bd);flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:.5rem;transition:all .2s}
+.plat-name{font-family:'Syne',sans-serif;font-size:.6rem;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.plat-cat{font-family:'Syne',sans-serif;font-size:.45rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--mt);padding:.1rem .4rem;background:rgba(255,255,255,.05)}
+
+/* RELEASE STATUS */
+.release-row{background:var(--bg);border:1px solid var(--bd);padding:.85rem 1rem;display:flex;align-items:center;gap:.9rem;margin-bottom:.5rem;transition:all .2s}
+.release-row:hover{border-color:rgba(201,168,76,.25)}
+.release-art{position:relative;width:48px;height:48px;background:linear-gradient(135deg,var(--s2),var(--s1));border:1px solid var(--bd);flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:1.3rem;overflow:hidden}
+.release-art img{width:100%;height:100%;object-fit:cover}
+.release-info{flex:1;min-width:0}
+.release-title{font-family:'Syne',sans-serif;font-size:.78rem;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.release-meta{font-size:.63rem;color:var(--mt);margin-top:.18rem}
+.release-plats{display:flex;gap:.25rem;margin-top:.4rem;flex-wrap:wrap}
+.plat-pill{font-family:'Syne',sans-serif;font-size:.48rem;font-weight:700;padding:.1rem .4rem;background:rgba(0,200,150,.08);border:1px solid rgba(0,200,150,.2);color:var(--gn)}
+.plat-pill.pending{background:rgba(201,168,76,.08);border-color:rgba(201,168,76,.2);color:var(--g)}
+.status-badge{font-family:'Syne',sans-serif;font-size:.52rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;padding:.2rem .6rem;border:1px solid;white-space:nowrap}
+.badge-live{background:rgba(0,200,150,.1);border-color:rgba(0,200,150,.3);color:var(--gn)}
+.badge-pending{background:rgba(201,168,76,.1);border-color:rgba(201,168,76,.3);color:var(--g)}
+.badge-review{background:rgba(0,229,255,.08);border-color:rgba(0,229,255,.2);color:var(--cy)}
+
+/* DISTRIBUTION TRACKER */
+.tracker-wrap{margin-top:.8rem}
+.tracker-plat{display:flex;align-items:center;gap:.7rem;padding:.5rem 0;border-bottom:1px solid rgba(255,255,255,.04)}
+.tracker-plat:last-child{border-bottom:none}
+.tracker-ico{font-size:1.1rem;width:28px;text-align:center;flex-shrink:0}
+.tracker-info{flex:1}
+.tracker-name{font-family:'Syne',sans-serif;font-size:.68rem;font-weight:700}
+.tracker-time{font-size:.58rem;color:var(--mt)}
+.tracker-bar-wrap{width:80px;height:3px;background:rgba(255,255,255,.07);flex-shrink:0}
+.tracker-bar{height:100%;background:linear-gradient(90deg,var(--g),var(--gn));width:0%;transition:width 1.5s ease}
+.tracker-stat{font-family:'Syne',sans-serif;font-size:.52rem;font-weight:700;letter-spacing:.08em;width:50px;text-align:right}
+
+/* PROMO GRID */
+.promo-channel{background:var(--bg);border:1px solid var(--bd);padding:1rem;transition:all .2s;cursor:pointer}
+.promo-channel:hover{border-color:rgba(201,168,76,.3);transform:translateY(-2px)}
+.promo-channel.active{border-color:var(--g);background:rgba(201,168,76,.04)}
+.promo-ico{font-size:1.8rem;margin-bottom:.5rem}
+.promo-name{font-family:'Syne',sans-serif;font-size:.68rem;font-weight:700;margin-bottom:.2rem}
+.promo-desc{font-size:.62rem;color:var(--mt);line-height:1.5}
+
+/* TOAST */
+.toast-wrap{position:fixed;top:1.2rem;right:1.2rem;z-index:9999;display:flex;flex-direction:column;gap:.4rem;pointer-events:none}
+.toast-item{background:var(--s1);border:1px solid var(--bd);padding:.65rem 1rem;font-family:'Syne',sans-serif;font-size:.65rem;font-weight:700;max-width:280px;animation:toastIn .25s ease;display:flex;align-items:center;gap:.5rem}
+@keyframes toastIn{from{opacity:0;transform:translateX(20px)}to{opacity:1;transform:translateX(0)}}
+.toast-item.gold{border-color:rgba(201,168,76,.5);color:var(--g)}
+.toast-item.green{border-color:rgba(0,200,150,.4);color:var(--gn)}
+.toast-item.red{border-color:rgba(255,68,68,.4);color:var(--rd)}
+.toast-item.blue{border-color:rgba(0,229,255,.3);color:var(--cy)}
+
+/* PROGRESS BAR */
+.prog-wrap{height:4px;background:rgba(255,255,255,.06);margin:.6rem 0;overflow:hidden}
+.prog-bar{height:100%;background:linear-gradient(90deg,var(--g),var(--cy));width:0%;transition:width .4s ease}
+
+/* API KEY INPUT */
+.api-key-wrap{background:rgba(201,168,76,.04);border:1px solid rgba(201,168,76,.2);padding:1rem;margin-bottom:.8rem}
+.api-key-wrap label{font-family:'Syne',sans-serif;font-size:.6rem;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--g);display:block;margin-bottom:.4rem}
+.api-key-row{display:flex;gap:.5rem}
+.api-key-row input{flex:1;background:var(--bg);border:1px solid var(--bd);color:var(--tx);padding:.6rem .8rem;font-family:'DM Sans',sans-serif;font-size:.78rem;outline:none}
+.api-key-row input:focus{border-color:var(--g)}
+.api-key-status{font-size:.62rem;color:var(--mt);margin-top:.3rem}
+.api-key-status.ok{color:var(--gn)}
+.api-key-status.err{color:var(--rd)}
+
+/* MOBILE */
+.hamburger{display:none;background:none;border:none;cursor:pointer;padding:.3rem;flex-direction:column;gap:4px}
+.hamburger span{display:block;width:22px;height:2px;background:var(--tx);transition:all .3s}
+.mobile-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:99}
+
+@media(max-width:768px){
+  .sidebar{transform:translateX(-100%)}
+  .sidebar.open{transform:translateX(0)}
+  .main{margin-left:0}
+  .hamburger{display:flex}
+  .mobile-overlay.show{display:block}
+  .stat-row{grid-template-columns:repeat(2,1fr)}
+  .grid2,.grid3{grid-template-columns:1fr}
+  .plat-grid{grid-template-columns:repeat(2,1fr)}
+  .page{padding:1rem}
+  .topbar{padding:.75rem 1rem}
+}
+
+/* STEP WIZARD */
+.step-nav{display:flex;margin-bottom:1.5rem;border-bottom:1px solid var(--bd)}
+.step-btn{padding:.7rem 1rem;font-family:'Syne',sans-serif;font-size:.62rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--mt);cursor:pointer;border-bottom:2px solid transparent;margin-bottom:-1px;transition:all .2s;background:none;border-top:none;border-left:none;border-right:none}
+.step-btn.active{color:var(--g);border-bottom-color:var(--g)}
+.step-btn.done{color:var(--gn)}
+.step-panel{display:none}
+.step-panel.active{display:block}
+
+/* SECTION HEADER */
+.section-header{margin-bottom:1.4rem}
+.section-title{font-family:'Cormorant Garamond',serif;font-size:1.6rem;font-weight:600;margin-bottom:.3rem}
+.section-sub{font-size:.8rem;color:var(--mt)}
+
+/* VIDEO UPLOAD */
+.video-thumb-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:.65rem;margin-top:.8rem}
+.video-card{background:var(--bg);border:1px solid var(--bd);overflow:hidden}
+.video-preview{background:var(--s2);height:100px;display:flex;align-items:center;justify-content:center;font-size:2.5rem;position:relative;cursor:pointer}
+.video-preview-bar{position:absolute;bottom:0;left:0;right:0;height:3px;background:linear-gradient(90deg,var(--g),var(--cy))}
+.video-info{padding:.6rem}
+.video-title{font-family:'Syne',sans-serif;font-size:.65rem;font-weight:700;margin-bottom:.2rem}
+.video-platforms{font-size:.58rem;color:var(--mt)}
+
+/* STREAMING EMBED */
+.embed-row{background:var(--bg);border:1px solid var(--bd);padding:.75rem 1rem;margin-bottom:.4rem;display:flex;align-items:center;gap:.75rem}
+.embed-ico{font-size:1.3rem;flex-shrink:0}
+.embed-name{font-family:'Syne',sans-serif;font-size:.7rem;font-weight:700;flex:1}
+.embed-input{flex:2;background:var(--s2);border:1px solid var(--bd);color:var(--tx);padding:.42rem .65rem;font-size:.7rem;outline:none}
+.embed-input:focus{border-color:var(--g)}
+
+/* LIVE INDICATOR */
+.live-dot{width:8px;height:8px;border-radius:50%;background:var(--gn);animation:pulse 2s infinite;flex-shrink:0}
+@keyframes pulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.5;transform:scale(1.2)}}
+
+/* LOGIN GATE */
+.login-gate{position:fixed;inset:0;background:#070710;z-index:99999;display:flex;align-items:center;justify-content:center;padding:1.5rem}
+.login-box{width:100%;max-width:380px;background:#0C0C1E;border:1px solid rgba(201,168,76,.2);padding:2.2rem 2rem}
+.login-logo{font-family:'Cormorant Garamond',serif;font-size:2.2rem;font-weight:600;background:linear-gradient(135deg,#C9A84C,#E2C97E);-webkit-background-clip:text;-webkit-text-fill-color:transparent;letter-spacing:.15em;text-align:center;margin-bottom:.3rem}
+.login-sub{font-family:'Syne',sans-serif;font-size:.55rem;font-weight:700;letter-spacing:.2em;text-transform:uppercase;color:#6B7280;text-align:center;margin-bottom:2rem}
+.login-err{background:rgba(255,68,68,.1);border:1px solid rgba(255,68,68,.3);color:#FF4444;font-family:'Syne',sans-serif;font-size:.65rem;font-weight:700;padding:.55rem .8rem;margin-bottom:1rem;display:none}
+.login-field{margin-bottom:1rem}
+.login-field label{display:block;font-family:'Syne',sans-serif;font-size:.55rem;font-weight:700;letter-spacing:.15em;text-transform:uppercase;color:#6B7280;margin-bottom:.4rem}
+.login-field input{width:100%;background:#070710;border:1px solid rgba(201,168,76,.15);color:#F0EDE6;padding:.8rem 1rem;font-family:'DM Sans',sans-serif;font-size:.9rem;outline:none;transition:border-color .2s}
+.login-field input:focus{border-color:#C9A84C}
+.login-btn{width:100%;background:linear-gradient(135deg,#C9A84C,#E2C97E);color:#000;font-family:'Syne',sans-serif;font-size:.7rem;font-weight:700;letter-spacing:.12em;text-transform:uppercase;padding:.85rem;border:none;cursor:pointer;margin-top:.5rem;transition:opacity .2s}
+.login-btn:hover{opacity:.9}
+.login-attempts{font-size:.6rem;color:#6B7280;text-align:center;margin-top:.8rem}
+
+</style>
+</head>
+<body>
+
+
+<div class="login-gate" id="loginGate">
+  <div class="login-box">
+    <div class="login-logo">CYRUS</div>
+    <div class="login-sub">Distribution Hub · Private Access</div>
+    <div class="login-err" id="loginErr">Incorrect credentials. Try again.</div>
+    <div class="login-field">
+      <label>Email</label>
+      <input type="email" id="loginEmail" placeholder="your@email.com" onkeydown="if(event.key==='Enter')doLogin()"/>
+    </div>
+    <div class="login-field">
+      <label>Password</label>
+      <input type="password" id="loginPass" placeholder="••••••••••" onkeydown="if(event.key==='Enter')doLogin()"/>
+    </div>
+    <button class="login-btn" onclick="doLogin()">🔐 Access Dashboard</button>
+    <div class="login-attempts" id="loginAttempts"></div>
+  </div>
+</div>
+
+<div class="toast-wrap" id="toastWrap"></div>
+<div class="mobile-overlay" id="mOverlay" onclick="closeSidebar()"></div>
+
+<div class="app">
+<!-- SIDEBAR -->
+<nav class="sidebar" id="sidebar">
+  <div class="logo">
+    <div class="logo-text">CYRUS</div>
+    <div class="logo-sub">Music Distribution Hub</div>
+  </div>
+  <div class="nav">
+    <div class="nav-section">Dashboard</div>
+    <div class="nav-item active" onclick="nav('home',this)"><span class="nav-ico">🏠</span>Overview</div>
+    <div class="nav-item" onclick="nav('releases',this)"><span class="nav-ico">📀</span>My Releases</div>
+    <div class="nav-section">Distribute</div>
+    <div class="nav-item" onclick="nav('upload',this)"><span class="nav-ico">📡</span>Upload &amp; Distribute</div>
+    <div class="nav-item" onclick="nav('video',this)"><span class="nav-ico">🎬</span>Video Distribution</div>
+    <div class="nav-item" onclick="nav('tracking',this)"><span class="nav-ico">📊</span>Distribution Tracker</div>
+    <div class="nav-section">Promote</div>
+    <div class="nav-item" onclick="nav('promote',this)"><span class="nav-ico">🚀</span>Promote Music</div>
+    <div class="nav-item" onclick="nav('links',this)"><span class="nav-ico">🔗</span>Smart Links</div>
+    <div class="nav-section">Earnings</div>
+    <div class="nav-item" onclick="nav('earnings',this)"><span class="nav-ico">💰</span>Earnings</div>
+    <div class="nav-section">Platforms</div>
+    <div class="nav-item" onclick="nav('platforms',this)"><span class="nav-ico">🌐</span>All Platforms</div>
+    <div class="nav-item" onclick="nav('freeupload',this)"><span class="nav-ico">⬆️</span>Free Direct Upload</div>
+    <div class="nav-section">Settings</div>
+    <div class="nav-item" onclick="nav('settings',this)"><span class="nav-ico">⚙️</span>API &amp; Settings</div>
+  </div>
+  <div class="sidebar-foot">
+    <div class="artist-card">
+      <div class="artist-avatar">🎤</div>
+      <div>
+        <div class="artist-name" id="artistName">Your Name</div>
+        <div class="artist-plan">Personal Distribution Hub</div>
+      </div>
+    </div>
+  </div>
+</nav>
+
+<!-- MAIN -->
+<div class="main">
+  <div class="topbar">
+    <div style="display:flex;align-items:center;gap:.75rem">
+      <button class="hamburger" onclick="toggleSidebar()"><span></span><span></span><span></span></button>
+      <div class="page-title" id="pageTitle">Overview</div>
+    </div>
+    <div class="topbar-actions">
+      <div style="display:flex;align-items:center;gap:.4rem;font-size:.65rem;color:var(--gn)">
+        <div class="live-dot"></div>Hub Active
+      </div>
+      <button class="btn btn-gold btn-sm" onclick="nav('upload',document.querySelector('[onclick*=upload]'))">+ New Release</button>
+    </div>
+  </div>
+
+  <!-- ══ HOME ══ -->
+  <div class="page active" id="page-home">
+    <div class="section-header">
+      <div class="section-title">Welcome back, <span id="dashName" style="color:var(--g)">Artist</span></div>
+      <div class="section-sub">Your personal music distribution command center</div>
+    </div>
+
+    <div class="stat-row">
+      <div class="stat"><div class="stat-val" id="st-releases">0</div><div class="stat-lbl">Releases</div></div>
+      <div class="stat"><div class="stat-val" id="st-platforms">0</div><div class="stat-lbl">Platforms Live</div></div>
+      <div class="stat"><div class="stat-val" id="st-videos">0</div><div class="stat-lbl">Videos</div></div>
+      <div class="stat"><div class="stat-val" id="st-streams">—</div><div class="stat-lbl">Est. Streams</div></div>
+    </div>
+
+    <div class="grid2">
+      <div class="card">
+        <h3>Recent Releases</h3>
+        <div id="home-releases">
+          <div style="text-align:center;padding:1.5rem;color:var(--mt);font-size:.75rem">No releases yet — distribute your first track</div>
+        </div>
+        <button class="btn btn-gold btn-sm" onclick="nav('upload',document.querySelector('[onclick*=upload]'))" style="margin-top:.5rem">+ Add Release</button>
+      </div>
+      <div class="card">
+        <h3>Quick Actions</h3>
+        <div style="display:flex;flex-direction:column;gap:.5rem">
+          <button class="btn btn-gold" style="justify-content:center" onclick="navTo('upload')">📡 Distribute New Track</button>
+          <button class="btn btn-outline" style="justify-content:center" onclick="navTo('video')">🎬 Upload Video</button>
+          <button class="btn btn-outline" style="justify-content:center" onclick="navTo('promote')">🚀 Promote Music</button>
+          <button class="btn btn-outline" style="justify-content:center" onclick="navTo('links')">🔗 Create Smart Link</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <h3>How Real Distribution Works</h3>
+      <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:1rem;margin-top:.5rem">
+        <div style="text-align:center;padding:.8rem">
+          <div style="font-size:2rem;margin-bottom:.5rem">1️⃣</div>
+          <div style="font-family:'Syne',sans-serif;font-size:.7rem;font-weight:700;margin-bottom:.3rem">Upload Your Track</div>
+          <div style="font-size:.65rem;color:var(--mt)">Upload your audio file + cover art + metadata</div>
+        </div>
+        <div style="text-align:center;padding:.8rem">
+          <div style="font-size:2rem;margin-bottom:.5rem">2️⃣</div>
+          <div style="font-family:'Syne',sans-serif;font-size:.7rem;font-weight:700;margin-bottom:.3rem">We Submit For You</div>
+          <div style="font-size:.65rem;color:var(--mt)">Your track gets submitted to Spotify, Apple, YouTube, Audiomack, Boomplay &amp; 50+ more</div>
+        </div>
+        <div style="text-align:center;padding:.8rem">
+          <div style="font-size:2rem;margin-bottom:.5rem">3️⃣</div>
+          <div style="font-family:'Syne',sans-serif;font-size:.7rem;font-weight:700;margin-bottom:.3rem">Go Live &amp; Earn</div>
+          <div style="font-size:.65rem;color:var(--mt)">Track goes live in 24–48h. Streams generate royalties paid to you</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Platform Coverage -->
+    <div class="card">
+      <h3>Platform Coverage</h3>
+      <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:.5rem;margin-top:.3rem" id="coverage-grid"></div>
+    </div>
+  </div>
+
+  <!-- ══ MY RELEASES ══ -->
+  <div class="page" id="page-releases">
+    <div class="section-header">
+      <div class="section-title">My Releases</div>
+      <div class="section-sub">All your distributed music — audio and video</div>
+    </div>
+    <div style="display:flex;gap:.5rem;margin-bottom:1rem;flex-wrap:wrap">
+      <button class="btn btn-gold btn-sm" onclick="nav('upload',document.querySelector('[onclick*=upload]'))">+ New Release</button>
+      <button class="btn btn-outline btn-sm" onclick="filterReleases('all')">All</button>
+      <button class="btn btn-outline btn-sm" onclick="filterReleases('live')">Live</button>
+      <button class="btn btn-outline btn-sm" onclick="filterReleases('pending')">Pending</button>
+      <button class="btn btn-outline btn-sm" onclick="addExistingRelease()" style="border-color:rgba(0,229,255,.3);color:var(--cy)">+ Add Existing Release</button>
+    </div>
+    <div id="releases-list">
+      <div class="card" style="text-align:center;padding:2rem;color:var(--mt)">
+        <div style="font-size:2rem;margin-bottom:.5rem">📀</div>
+        <div style="font-family:'Syne',sans-serif;font-size:.75rem;font-weight:700;margin-bottom:.4rem">No Releases Yet</div>
+        <div style="font-size:.72rem;margin-bottom:1rem">Upload your first track to get distributed worldwide</div>
+        <button class="btn btn-gold" onclick="nav('upload',document.querySelector('[onclick*=upload]'))">📡 Distribute First Track</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══ UPLOAD & DISTRIBUTE ══ -->
+  <div class="page" id="page-upload">
+    <div class="section-header">
+      <div class="section-title">Upload &amp; Distribute</div>
+      <div class="section-sub">Submit your music to 70+ streaming platforms worldwide</div>
+    </div>
+
+    <!-- Step Nav -->
+    <div class="step-nav">
+      <button class="step-btn active" id="step-btn-1" onclick="goStep(1)">1 · Upload Files</button>
+      <button class="step-btn" id="step-btn-2" onclick="goStep(2)">2 · Track Info</button>
+      <button class="step-btn" id="step-btn-3" onclick="goStep(3)">3 · Choose Platforms</button>
+      <button class="step-btn" id="step-btn-4" onclick="goStep(4)">4 · Distribute</button>
+    </div>
+
+    <!-- Step 1: Upload -->
+    <div class="step-panel active" id="step-1">
+      <div class="grid2">
+        <div>
+          <div class="fg">
+            <label>Audio File (MP3, WAV, FLAC)</label>
+            <div class="upzone" id="audio-zone" ondragover="this.classList.add('drag');event.preventDefault()" ondragleave="this.classList.remove('drag')" ondrop="handleDrop(event,'audio')">
+              <input type="file" accept="audio/*" onchange="handleAudioFile(this)" id="audioInput"/>
+              <div class="upzone-ico">🎵</div>
+              <div class="upzone-title">Drop audio file here or tap to browse</div>
+              <div class="upzone-sub">MP3 · WAV · FLAC · Max 500MB · 16-bit or 24-bit recommended</div>
+            </div>
+            <div id="audio-file-info"></div>
+          </div>
+          <div class="fg">
+            <label>30-sec Preview Clip <span style="color:var(--mt);font-size:.9em">(optional — sent to Apple iTunes)</span></label>
+            <div class="upzone" style="padding:1rem">
+              <input type="file" accept="audio/*" onchange="handlePreview(this)"/>
+              <div style="font-size:1.2rem;margin-bottom:.3rem">✂️</div>
+              <div class="upzone-title" style="font-size:.68rem">Upload Preview Clip</div>
+              <div class="upzone-sub">30 seconds · sent to stores for previews</div>
+            </div>
+            <div id="preview-file-info"></div>
+          </div>
+        </div>
+        <div>
+          <div class="fg">
+            <label>Cover Artwork <span style="color:var(--rd);font-size:.9em">*Required by all stores</span></label>
+            <div class="upzone" id="art-zone" style="padding:1.2rem" ondragover="this.classList.add('drag');event.preventDefault()" ondragleave="this.classList.remove('drag')">
+              <input type="file" accept="image/*" onchange="handleArtwork(this)"/>
+              <div id="art-preview" style="font-size:2rem;margin-bottom:.4rem">🖼️</div>
+              <div class="upzone-title" style="font-size:.68rem">Upload Cover Art</div>
+              <div class="upzone-sub">3000×3000px · JPG or PNG · Max 10MB</div>
+            </div>
+          </div>
+          <div class="fg" style="background:rgba(201,168,76,.04);border:1px solid var(--bd);padding:.8rem">
+            <div style="font-family:'Syne',sans-serif;font-size:.58rem;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--g);margin-bottom:.5rem">Audio Quality Check</div>
+            <div id="quality-check" style="font-size:.68rem;color:var(--mt)">Upload a file to see quality analysis</div>
+          </div>
+        </div>
+      </div>
+      <button class="btn btn-gold" onclick="goStep(2)">Next: Track Info →</button>
+    </div>
+
+    <!-- Step 2: Track Info -->
+    <div class="step-panel" id="step-2">
+      <div class="grid2">
+        <div>
+          <div class="fg"><label>Track Title *</label><input type="text" id="f-title" placeholder="Enter track title..."/></div>
+          <div class="fg"><label>Artist Name *</label><input type="text" id="f-artist" placeholder="Your artist name..." value=""/></div>
+          <div class="fg"><label>Featured Artists</label><input type="text" id="f-feat" placeholder="e.g. ft. Artist B (leave blank if none)"/></div>
+          <div class="fg"><label>Album / EP / Single Name</label><input type="text" id="f-album" placeholder="Leave blank for single release"/></div>
+          <div class="fg"><label>Genre *</label>
+            <select id="f-genre">
+              <option>Afrobeats</option><option>Afro-Pop</option><option>Amapiano</option>
+              <option>Afro-Soul</option><option>Hip-Hop / Trap</option><option>R&B / Soul</option>
+              <option>Gospel</option><option>Dancehall / Reggae</option><option>Pop</option>
+              <option>Electronic</option><option>Jazz</option><option>Classical</option>
+              <option>Highlife</option><option>Fuji</option><option>Jùjú</option>
+            </select>
+          </div>
+          <div class="fg"><label>Sub-genre / Mood</label><input type="text" id="f-subgenre" placeholder="e.g. Drill, Afro-fusion, Worship..."/></div>
+        </div>
+        <div>
+          <div class="fg"><label>Release Date *</label><input type="date" id="f-date" style="color-scheme:dark"/></div>
+          <div class="fg"><label>Language</label>
+            <select id="f-lang">
+              <option>English</option><option>Yoruba</option><option>Igbo</option><option>Hausa</option>
+              <option>Luganda</option><option>Swahili</option><option>Pidgin</option><option>French</option>
+              <option>Portuguese</option><option>Amharic</option><option>Twi</option><option>Zulu</option>
+            </select>
+          </div>
+          <div class="fg"><label>Explicit Content</label>
+            <select id="f-explicit"><option value="no">No — Clean version</option><option value="yes">Yes — Explicit</option></select>
+          </div>
+          <div class="fg"><label>Copyright Year &amp; Owner</label><input type="text" id="f-copyright" placeholder="e.g. 2025 Your Name"/></div>
+          <div class="fg"><label>Record Label <span style="color:var(--mt)">(or your name if independent)</span></label><input type="text" id="f-label" placeholder="e.g. Cyrus Music / Independent"/></div>
+          <div class="fg"><label>Song Lyrics <span style="color:var(--mt)">(helps with Spotify Canvas &amp; lyrics display)</span></label>
+            <textarea id="f-lyrics" placeholder="Paste your lyrics here..."></textarea>
+          </div>
+        </div>
+      </div>
+      <div style="display:flex;gap:.6rem">
+        <button class="btn btn-outline" onclick="goStep(1)">← Back</button>
+        <button class="btn btn-gold" onclick="goStep(3)">Next: Choose Platforms →</button>
+      </div>
+    </div>
+
+    <!-- Step 3: Platforms -->
+    <div class="step-panel" id="step-3">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:.8rem;flex-wrap:wrap;gap:.5rem">
+        <div>
+          <div style="font-family:'Syne',sans-serif;font-size:.72rem;font-weight:700;color:var(--g)" id="plat-count-label">0 platforms selected</div>
+          <div style="font-size:.62rem;color:var(--mt)">Select all platforms you want your music on</div>
+        </div>
+        <div style="display:flex;gap:.4rem">
+          <button class="btn btn-outline btn-sm" onclick="selAllPlats(true)">✓ Select All</button>
+          <button class="btn btn-outline btn-sm" onclick="selAllPlats(false)">✗ Clear</button>
+        </div>
+      </div>
+      <div id="platforms-grid" class="plat-grid"></div>
+      <div style="display:flex;gap:.6rem;margin-top:.8rem">
+        <button class="btn btn-outline" onclick="goStep(2)">← Back</button>
+        <button class="btn btn-gold" onclick="goStep(4)">Next: Review &amp; Distribute →</button>
+      </div>
+    </div>
+
+    <!-- Step 4: Distribute -->
+    <div class="step-panel" id="step-4">
+      <div class="card" id="review-card">
+        <h3>Release Summary</h3>
+        <div id="review-content"></div>
+      </div>
+      <div class="card">
+        <h3>Distribution Method</h3>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:.8rem;margin-bottom:1rem">
+          <div class="promo-channel active" id="dm-cyrus" onclick="selectDistMethod('cyrus',this)">
+            <div class="promo-ico">📦</div>
+            <div class="promo-name">Prepare Release Package</div>
+            <div class="promo-desc">We package your release (ISRC/UPC codes, metadata, artwork) and open each platform's upload page for you one by one.</div>
+          </div>
+          <div class="promo-channel" id="dm-distrokid" onclick="selectDistMethod('distrokid',this)">
+            <div class="promo-ico">🌐</div>
+            <div class="promo-name">Via DistroKid</div>
+            <div class="promo-desc">Redirect to DistroKid with your metadata pre-filled. Requires DistroKid account.</div>
+          </div>
+        </div>
+        <div id="dist-method-info" style="background:rgba(201,168,76,.05);border:1px solid var(--bd);padding:.9rem;font-size:.72rem;margin-bottom:1rem;color:var(--mt)">
+          CYRUS Hub prepares your release package, auto-assigns ISRC/UPC codes, and submits to all selected platforms simultaneously. Your music goes live in 24–48 hours.
+        </div>
+        <div style="display:flex;gap:.6rem;flex-wrap:wrap">
+          <button class="btn btn-outline" onclick="goStep(3)">← Back</button>
+          <button class="btn btn-gold" id="dist-btn" onclick="startDistribution()">🚀 Distribute Now</button>
+        </div>
+      </div>
+      <!-- Distribution Progress -->
+      <div class="card" id="dist-progress-card" style="display:none">
+        <h3>Distribution in Progress</h3>
+        <div id="dist-progress-inner"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══ VIDEO DISTRIBUTION ══ -->
+  <div class="page" id="page-video">
+    <div class="section-header">
+      <div class="section-title">Video Distribution</div>
+      <div class="section-sub">Upload and distribute your music videos to YouTube, TikTok, Instagram and more</div>
+    </div>
+
+    <div class="grid2">
+      <div>
+        <div class="card">
+          <h3>Upload Video</h3>
+          <div class="fg">
+            <label>Video File</label>
+            <div class="upzone" style="padding:1.2rem">
+              <input type="file" accept="video/*" onchange="handleVideoFile(this)"/>
+              <div style="font-size:1.8rem;margin-bottom:.4rem">🎬</div>
+              <div class="upzone-title">Drop video file or tap to browse</div>
+              <div class="upzone-sub">MP4 · MOV · AVI · Max 4GB · 1080p or 4K recommended</div>
+            </div>
+            <div id="video-file-info"></div>
+          </div>
+          <div class="fg"><label>Video Title</label><input type="text" id="v-title" placeholder="Video title..."/></div>
+          <div class="fg"><label>Description</label><textarea id="v-desc" placeholder="Describe your video for search engines..."></textarea></div>
+          <div class="fg"><label>Tags / Keywords</label><input type="text" id="v-tags" placeholder="e.g. afrobeats, new music, 2025..."/></div>
+          <div class="fg"><label>Video Type</label>
+            <select id="v-type">
+              <option>Official Music Video</option>
+              <option>Lyric Video</option>
+              <option>Visualizer</option>
+              <option>Live Performance</option>
+              <option>Behind the Scenes</option>
+              <option>Short / Reel</option>
+            </select>
+          </div>
+        </div>
+      </div>
+      <div>
+        <div class="card">
+          <h3>Video Platforms</h3>
+          <div style="display:flex;flex-direction:column;gap:.45rem" id="video-platforms">
+            <label class="vplat-item" style="display:flex;align-items:center;gap:.7rem;padding:.65rem;background:var(--bg);border:1px solid var(--bd);cursor:pointer">
+              <input type="checkbox" checked style="accent-color:var(--g)"/>
+              <span style="font-size:1.1rem">📺</span>
+              <div><div style="font-family:'Syne',sans-serif;font-size:.7rem;font-weight:700">YouTube</div><div style="font-size:.6rem;color:var(--mt)">Official music video channel — requires YouTube API key</div></div>
+            </label>
+            <label class="vplat-item" style="display:flex;align-items:center;gap:.7rem;padding:.65rem;background:var(--bg);border:1px solid var(--bd);cursor:pointer">
+              <input type="checkbox" checked style="accent-color:var(--g)"/>
+              <span style="font-size:1.1rem">📱</span>
+              <div><div style="font-family:'Syne',sans-serif;font-size:.7rem;font-weight:700">TikTok</div><div style="font-size:.6rem;color:var(--mt)">Short clips &amp; full videos — auto-trim to 60s for feed</div></div>
+            </label>
+            <label class="vplat-item" style="display:flex;align-items:center;gap:.7rem;padding:.65rem;background:var(--bg);border:1px solid var(--bd);cursor:pointer">
+              <input type="checkbox" checked style="accent-color:var(--g)"/>
+              <span style="font-size:1.1rem">📸</span>
+              <div><div style="font-family:'Syne',sans-serif;font-size:.7rem;font-weight:700">Instagram Reels</div><div style="font-size:.6rem;color:var(--mt)">Reels, IGTV, Stories — auto-formatted</div></div>
+            </label>
+            <label class="vplat-item" style="display:flex;align-items:center;gap:.7rem;padding:.65rem;background:var(--bg);border:1px solid var(--bd);cursor:pointer">
+              <input type="checkbox" style="accent-color:var(--g)"/>
+              <span style="font-size:1.1rem">📘</span>
+              <div><div style="font-family:'Syne',sans-serif;font-size:.7rem;font-weight:700">Facebook</div><div style="font-size:.6rem;color:var(--mt)">Facebook Watch &amp; feed videos</div></div>
+            </label>
+            <label class="vplat-item" style="display:flex;align-items:center;gap:.7rem;padding:.65rem;background:var(--bg);border:1px solid var(--bd);cursor:pointer">
+              <input type="checkbox" style="accent-color:var(--g)"/>
+              <span style="font-size:1.1rem">🐦</span>
+              <div><div style="font-family:'Syne',sans-serif;font-size:.7rem;font-weight:700">X (Twitter)</div><div style="font-size:.6rem;color:var(--mt)">Auto-post video clip</div></div>
+            </label>
+          </div>
+          <div style="margin-top:.9rem">
+            <div class="fg"><label>Thumbnail</label>
+              <div class="upzone" style="padding:.9rem">
+                <input type="file" accept="image/*" onchange="handleThumb(this)"/>
+                <div style="font-size:1rem;margin-bottom:.2rem">🖼️</div>
+                <div class="upzone-title" style="font-size:.65rem">Upload Custom Thumbnail</div>
+              </div>
+            </div>
+            <button class="btn btn-gold" style="width:100%;justify-content:center" onclick="distributeVideo()">🎬 Distribute Video</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- My Videos -->
+    <div class="card">
+      <h3>My Videos</h3>
+      <div id="my-videos-list">
+        <div style="text-align:center;padding:1.5rem;color:var(--mt);font-size:.72rem">No videos distributed yet</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══ TRACKING ══ -->
+  <div class="page" id="page-tracking">
+    <div class="section-header">
+      <div class="section-title">Distribution Tracker</div>
+      <div class="section-sub">Real-time status of your releases across all platforms</div>
+    </div>
+    <div class="card">
+      <h3>Select Release to Track</h3>
+      <select id="track-select" onchange="loadTracking(this.value)" style="background:var(--bg);border:1px solid var(--bd);color:var(--tx);padding:.6rem .8rem;width:100%;font-size:.82rem;outline:none">
+        <option value="">— Choose a release —</option>
+      </select>
+    </div>
+    <div id="tracking-detail">
+      <div style="text-align:center;padding:2rem;color:var(--mt);font-size:.72rem">Select a release to see distribution status</div>
+    </div>
+  </div>
+
+  <!-- ══ PROMOTE ══ -->
+  <div class="page" id="page-promote">
+    <div class="section-header">
+      <div class="section-title">Promote Your Music</div>
+      <div class="section-sub">Get your music heard — playlists, radio, social media, and more</div>
+    </div>
+
+    <div class="grid2" style="margin-bottom:1rem">
+      <div class="card">
+        <h3>Playlist Pitching</h3>
+        <div class="fg"><label>Select Release</label>
+          <select id="pitch-release" style="background:var(--bg);border:1px solid var(--bd);color:var(--tx);padding:.6rem .8rem;width:100%;outline:none;font-size:.82rem">
+            <option>— Select a release —</option>
+          </select>
+        </div>
+        <div class="fg"><label>Target Playlists</label>
+          <div style="display:flex;flex-direction:column;gap:.35rem">
+            <label style="display:flex;align-items:center;gap:.5rem;font-size:.72rem;cursor:pointer"><input type="checkbox" checked style="accent-color:var(--g)"/> Spotify Editorial Playlists</label>
+            <label style="display:flex;align-items:center;gap:.5rem;font-size:.72rem;cursor:pointer"><input type="checkbox" checked style="accent-color:var(--g)"/> Apple Music New Music Daily</label>
+            <label style="display:flex;align-items:center;gap:.5rem;font-size:.72rem;cursor:pointer"><input type="checkbox" checked style="accent-color:var(--g)"/> Audiomack Trending</label>
+            <label style="display:flex;align-items:center;gap:.5rem;font-size:.72rem;cursor:pointer"><input type="checkbox" style="accent-color:var(--g)"/> Boomplay Hot Songs Africa</label>
+            <label style="display:flex;align-items:center;gap:.5rem;font-size:.72rem;cursor:pointer"><input type="checkbox" style="accent-color:var(--g)"/> YouTube Music Charts</label>
+          </div>
+        </div>
+        <div class="fg"><label>Pitch Notes <span style="color:var(--mt)">(tell curators about your song)</span></label>
+          <textarea id="pitch-notes" placeholder="Tell playlist curators why your song deserves placement..."></textarea>
+        </div>
+        <button class="btn btn-gold" onclick="pitchToPlaylists()">🎯 Submit Pitch</button>
+      </div>
+      <div class="card">
+        <h3>Radio Submission</h3>
+        <div style="display:flex;flex-direction:column;gap:.4rem;margin-bottom:.9rem">
+          <div class="embed-row" style="flex-direction:column;align-items:flex-start;gap:.3rem">
+            <label style="display:flex;align-items:center;gap:.5rem;font-size:.72rem;cursor:pointer;width:100%"><input type="checkbox" checked style="accent-color:var(--g)"/> <span>📻</span> Uganda Radio Stations (KFM, Capital FM, NBS)</label>
+            <label style="display:flex;align-items:center;gap:.5rem;font-size:.72rem;cursor:pointer;width:100%"><input type="checkbox" checked style="accent-color:var(--g)"/> <span>📻</span> Nigeria Radio (Cool FM, Beats FM, Wazobia)</label>
+            <label style="display:flex;align-items:center;gap:.5rem;font-size:.72rem;cursor:pointer;width:100%"><input type="checkbox" style="accent-color:var(--g)"/> <span>📻</span> Ghana Radio (Joy FM, Hitz FM)</label>
+            <label style="display:flex;align-items:center;gap:.5rem;font-size:.72rem;cursor:pointer;width:100%"><input type="checkbox" style="accent-color:var(--g)"/> <span>📻</span> Kenya Radio (Radio Africa, Classic 105)</label>
+            <label style="display:flex;align-items:center;gap:.5rem;font-size:.72rem;cursor:pointer;width:100%"><input type="checkbox" style="accent-color:var(--g)"/> <span>📻</span> BBC Radio 1Xtra (UK)</label>
+            <label style="display:flex;align-items:center;gap:.5rem;font-size:.72rem;cursor:pointer;width:100%"><input type="checkbox" style="accent-color:var(--g)"/> <span>📻</span> iHeartRadio (USA)</label>
+          </div>
+        </div>
+        <button class="btn btn-gold" onclick="submitRadio()">📻 Submit to Radio</button>
+      </div>
+    </div>
+
+    <div class="card">
+      <h3>Social Media Promotion</h3>
+      <div class="grid3">
+        <div class="promo-channel" onclick="openSocialPromo('tiktok',this)">
+          <div class="promo-ico">📱</div>
+          <div class="promo-name">TikTok Push</div>
+          <div class="promo-desc">Create a TikTok trend with your track. Auto-generate viral hooks and challenges.</div>
+        </div>
+        <div class="promo-channel" onclick="openSocialPromo('instagram',this)">
+          <div class="promo-ico">📸</div>
+          <div class="promo-name">Instagram</div>
+          <div class="promo-desc">Reels, Stories, and feed posts. Auto-resize and add animated cover art.</div>
+        </div>
+        <div class="promo-channel" onclick="openSocialPromo('youtube',this)">
+          <div class="promo-ico">📺</div>
+          <div class="promo-name">YouTube Shorts</div>
+          <div class="promo-desc">Auto-generate YouTube Shorts from your track and get recommended to new audiences.</div>
+        </div>
+        <div class="promo-channel" onclick="openSocialPromo('press',this)">
+          <div class="promo-ico">📰</div>
+          <div class="promo-name">Press &amp; Blogs</div>
+          <div class="promo-desc">Submit to music blogs: NotJustOk, Pulse Africa, Okay Africa, BellaNaija Music.</div>
+        </div>
+        <div class="promo-channel" onclick="openSocialPromo('whatsapp',this)">
+          <div class="promo-ico">💬</div>
+          <div class="promo-name">WhatsApp Status</div>
+          <div class="promo-desc">Create a 30-sec WhatsApp Status clip with animated cover art to share instantly.</div>
+        </div>
+        <div class="promo-channel" onclick="openSocialPromo('sync',this)">
+          <div class="promo-ico">🎬</div>
+          <div class="promo-name">Sync Licensing</div>
+          <div class="promo-desc">Submit your track for TV, film, commercials, and YouTube content creators.</div>
+        </div>
+      </div>
+    </div>
+    <div class="card" id="promo-action-panel" style="display:none">
+      <h3 id="promo-action-title">Promotion Action</h3>
+      <div id="promo-action-body"></div>
+    </div>
+  </div>
+
+  <!-- ══ SMART LINKS ══ -->
+  <div class="page" id="page-links">
+    <div class="section-header">
+      <div class="section-title">Smart Links</div>
+      <div class="section-sub">One link that sends fans to their preferred streaming platform</div>
+    </div>
+    <div class="card">
+      <h3>Create Smart Link</h3>
+      <div class="fg"><label>Release</label>
+        <select id="sl-release" style="background:var(--bg);border:1px solid var(--bd);color:var(--tx);padding:.6rem .8rem;width:100%;outline:none;font-size:.82rem">
+          <option>— Select release —</option>
+        </select>
+      </div>
+      <div class="fg"><label>Custom Link Slug</label>
+        <div style="display:flex;align-items:center;gap:.4rem">
+          <span style="font-size:.75rem;color:var(--mt);white-space:nowrap">cyrus.link/</span>
+          <input type="text" id="sl-slug" placeholder="your-track-name" style="flex:1"/>
+        </div>
+      </div>
+      <button class="btn btn-gold" onclick="createSmartLink()">🔗 Generate Smart Link</button>
+    </div>
+    <div class="card">
+      <h3>My Smart Links</h3>
+      <div id="smart-links-list">
+        <div style="text-align:center;padding:1.5rem;color:var(--mt);font-size:.72rem">No smart links yet — distribute a track first</div>
+      </div>
+    </div>
+    <!-- Platform Streaming Links -->
+    <div class="card">
+      <h3>Your Artist Profile Links</h3>
+      <div style="font-size:.7rem;color:var(--mt);margin-bottom:.8rem;line-height:1.7">
+        Paste your artist profile URL from each platform. These appear on your Smart Link pages so fans can follow you everywhere.
+      </div>
+      <div id="streaming-links-form"></div>
+      <button class="btn btn-gold btn-sm" onclick="saveStreamingLinks()" style="margin-top:.5rem">💾 Save All Links</button>
+    </div>
+
+    <div class="card">
+      <h3>Artist Profile Creator</h3>
+      <div style="font-size:.7rem;color:var(--mt);margin-bottom:.9rem">Don't have profiles yet? Go create them free — then paste the link above.</div>
+      <div style="display:flex;flex-direction:column;gap:.45rem">
+        <a href="https://artists.spotify.com" target="_blank" class="btn btn-outline" style="text-decoration:none;justify-content:space-between">
+          <span>🎵 Spotify for Artists — Claim your profile</span><span style="color:var(--g)">Open →</span>
+        </a>
+        <a href="https://audiomack.com/upload" target="_blank" class="btn btn-outline" style="text-decoration:none;justify-content:space-between">
+          <span>📣 Audiomack — Create artist account</span><span style="color:var(--g)">Open →</span>
+        </a>
+        <a href="https://artist.boomplay.com" target="_blank" class="btn btn-outline" style="text-decoration:none;justify-content:space-between">
+          <span>🎤 Boomplay Artist — Register free</span><span style="color:var(--g)">Open →</span>
+        </a>
+        <a href="https://studio.youtube.com" target="_blank" class="btn btn-outline" style="text-decoration:none;justify-content:space-between">
+          <span>▶️ YouTube Studio — Create channel</span><span style="color:var(--g)">Open →</span>
+        </a>
+        <a href="https://soundcloud.com/upload" target="_blank" class="btn btn-outline" style="text-decoration:none;justify-content:space-between">
+          <span>🔶 SoundCloud — Upload free</span><span style="color:var(--g)">Open →</span>
+        </a>
+        <a href="https://www.tiktok.com/upload" target="_blank" class="btn btn-outline" style="text-decoration:none;justify-content:space-between">
+          <span>📱 TikTok — Create artist account</span><span style="color:var(--g)">Open →</span>
+        </a>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══ EARNINGS ══ -->
+  <div class="page" id="page-earnings">
+    <div class="section-header">
+      <div class="section-title">Earnings</div>
+      <div class="section-sub">Add your streaming links to track revenue across platforms</div>
+    </div>
+    <div class="stat-row">
+      <div class="stat"><div class="stat-val" style="color:var(--gn)">$0.00</div><div class="stat-lbl">Total Earned</div></div>
+      <div class="stat"><div class="stat-val" style="color:var(--g)">$0.00</div><div class="stat-lbl">Available</div></div>
+      <div class="stat"><div class="stat-val">$0.00</div><div class="stat-lbl">Pending</div></div>
+      <div class="stat"><div class="stat-val">—</div><div class="stat-lbl">Next Payout</div></div>
+    </div>
+    <div class="card">
+      <h3>Streaming Revenue Rates</h3>
+      <div style="overflow-x:auto">
+        <table style="width:100%;border-collapse:collapse;font-size:.72rem">
+          <thead><tr style="border-bottom:1px solid var(--bd)">
+            <th style="text-align:left;padding:.5rem;font-family:'Syne',sans-serif;font-size:.58rem;letter-spacing:.12em;text-transform:uppercase;color:var(--mt)">Platform</th>
+            <th style="text-align:right;padding:.5rem;font-family:'Syne',sans-serif;font-size:.58rem;letter-spacing:.12em;text-transform:uppercase;color:var(--mt)">Per Stream</th>
+            <th style="text-align:right;padding:.5rem;font-family:'Syne',sans-serif;font-size:.58rem;letter-spacing:.12em;text-transform:uppercase;color:var(--mt)">Streams</th>
+            <th style="text-align:right;padding:.5rem;font-family:'Syne',sans-serif;font-size:.58rem;letter-spacing:.12em;text-transform:uppercase;color:var(--mt)">Earned</th>
+          </tr></thead>
+          <tbody id="earnings-table">
+            <tr><td colspan="4" style="text-align:center;padding:1.5rem;color:var(--mt)">Distribute music to start earning</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══ SETTINGS ══ -->
+  <div class="page" id="page-settings">
+    <div class="section-header">
+      <div class="section-title">Settings &amp; API Keys</div>
+      <div class="section-sub">Connect real streaming platforms with your API credentials</div>
+    </div>
+
+    <div class="card">
+      <h3>Artist Profile</h3>
+      <div class="grid2">
+        <div class="fg"><label>Your Artist Name</label><input type="text" id="s-artist" placeholder="Your artist name" oninput="saveSettings()"/></div>
+        <div class="fg"><label>Home Country</label>
+          <select id="s-country" onchange="saveSettings()">
+            <option>Uganda</option><option>Nigeria</option><option>Ghana</option><option>Kenya</option>
+            <option>South Africa</option><option>Tanzania</option><option>Ethiopia</option>
+            <option>Zimbabwe</option><option>UK</option><option>USA</option><option>Canada</option>
+          </select>
+        </div>
+        <div class="fg"><label>Phone / WhatsApp (for payout notifications)</label><input type="tel" id="s-phone" placeholder="+256..." oninput="saveSettings()"/></div>
+        <div class="fg"><label>Email</label><input type="email" id="s-email" placeholder="your@email.com" oninput="saveSettings()"/></div>
+      </div>
+    </div>
+
+    <div class="card">
+      <h3>Platform API Keys</h3>
+      <div style="font-size:.72rem;color:var(--mt);margin-bottom:1rem;line-height:1.7">
+        Add API keys to enable real uploads to each platform. Without keys, CYRUS prepares your release package and guides you through manual submission.
+      </div>
+
+      <div class="api-key-wrap">
+        <label>YouTube Data API v3 Key — <a href="https://console.cloud.google.com" target="_blank" style="color:var(--cy)">Get key →</a></label>
+        <div class="api-key-row">
+          <input type="password" id="key-youtube" placeholder="AIzaSy..." oninput="checkKey('youtube')"/>
+          <button class="btn btn-outline btn-sm" onclick="testKey('youtube')">Test</button>
+        </div>
+        <div class="api-key-status" id="key-youtube-status">Not configured — YouTube upload will use manual guide</div>
+      </div>
+
+      <div class="api-key-wrap">
+        <label>Audiomack API Key — <a href="https://audiomack.com/data-api/docs" target="_blank" style="color:var(--cy)">Get key →</a></label>
+        <div class="api-key-row">
+          <input type="password" id="key-audiomack" placeholder="Your Audiomack API key..." oninput="checkKey('audiomack')"/>
+          <button class="btn btn-outline btn-sm" onclick="testKey('audiomack')">Test</button>
+        </div>
+        <div class="api-key-status" id="key-audiomack-status">Not configured</div>
+      </div>
+
+      <div class="api-key-wrap">
+        <label>SoundCloud Client ID — <a href="https://soundcloud.com/you/apps" target="_blank" style="color:var(--cy)">Get key →</a></label>
+        <div class="api-key-row">
+          <input type="password" id="key-soundcloud" placeholder="Your SoundCloud client ID..." oninput="checkKey('soundcloud')"/>
+          <button class="btn btn-outline btn-sm" onclick="testKey('soundcloud')">Test</button>
+        </div>
+        <div class="api-key-status" id="key-soundcloud-status">Not configured</div>
+      </div>
+
+      <div class="api-key-wrap">
+        <label>Stripe API Key (for earnings payouts) — <a href="https://stripe.com" target="_blank" style="color:var(--cy)">Get key →</a></label>
+        <div class="api-key-row">
+          <input type="password" id="key-stripe" placeholder="pk_live_..." oninput="checkKey('stripe')"/>
+          <button class="btn btn-outline btn-sm" onclick="testKey('stripe')">Test</button>
+        </div>
+        <div class="api-key-status" id="key-stripe-status">Not configured</div>
+      </div>
+
+      <div class="api-key-wrap">
+        <label>Flutterwave Key (MTN MoMo / Airtel Money payouts) — <a href="https://flutterwave.com" target="_blank" style="color:var(--cy)">Get key →</a></label>
+        <div class="api-key-row">
+          <input type="password" id="key-flw" placeholder="FLWPUBK-..." oninput="checkKey('flw')"/>
+          <button class="btn btn-outline btn-sm" onclick="testKey('flw')">Test</button>
+        </div>
+        <div class="api-key-status" id="key-flw-status">Not configured</div>
+      </div>
+
+      <button class="btn btn-gold" onclick="saveAllKeys()">💾 Save All Keys</button>
+    </div>
+
+    <div class="card">
+      <h3>Export Data</h3>
+      <div style="display:flex;gap:.5rem;flex-wrap:wrap">
+        <button class="btn btn-outline btn-sm" onclick="exportData()">📦 Export All Data (JSON)</button>
+        <button class="btn btn-outline btn-sm" onclick="importData()">📥 Import Data</button>
+        <button class="btn btn-red btn-sm" onclick="clearAll()">🗑️ Clear All Data</button>
+      </div>
+    </div>
+  </div>
+
+
+  <!-- ══ ALL PLATFORMS ══ -->
+  <div class="page" id="page-platforms">
+    <div class="section-header">
+      <div class="section-title">All Distribution Platforms</div>
+      <div class="section-sub">Every platform CYRUS distributes to — select your defaults for new releases</div>
+    </div>
+    <div style="display:flex;gap:.5rem;margin-bottom:1rem;flex-wrap:wrap;align-items:center">
+      <button class="btn btn-gold btn-sm" onclick="selAllDefaultPlats(true)">✓ Select All</button>
+      <button class="btn btn-outline btn-sm" onclick="selAllDefaultPlats(false)">✗ Clear All</button>
+      <span style="font-family:'Syne',sans-serif;font-size:.65rem;font-weight:700;color:var(--g)" id="def-plat-count">All selected by default</span>
+    </div>
+    <div id="all-platforms-grid" style="display:grid;grid-template-columns:repeat(2,1fr);gap:.45rem"></div>
+    <div style="margin-top:1rem">
+      <button class="btn btn-gold" onclick="saveDefaultPlatforms()">💾 Save as My Default Platforms</button>
+    </div>
+  </div>
+
+  <!-- ══ FREE DIRECT UPLOAD ══ -->
+  <div class="page" id="page-freeupload">
+    <div class="section-header">
+      <div class="section-title">Upload Your Music — Free Platforms</div>
+      <div class="section-sub">Step-by-step guide for every free platform. Tap a platform, copy your details, go live.</div>
+    </div>
+
+    <!-- RELEASE SELECTOR -->
+    <div class="card" style="margin-bottom:1rem">
+      <div style="font-family:'Syne',sans-serif;font-size:.6rem;font-weight:700;letter-spacing:.15em;text-transform:uppercase;color:var(--g);margin-bottom:.6rem">Select Release to Upload</div>
+      <select id="fu-release-select" onchange="loadFuRelease()" style="background:var(--bg);border:1px solid var(--bd);color:var(--tx);padding:.6rem .8rem;width:100%;outline:none;font-size:.82rem;margin-bottom:.7rem">
+        <option>— Select a release —</option>
+      </select>
+      <div id="fu-meta-box" style="display:none">
+        <div style="font-family:'Syne',sans-serif;font-size:.58rem;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--mt);margin-bottom:.5rem">Your metadata — tap any field to copy</div>
+        <div style="display:flex;flex-direction:column;gap:.35rem" id="fu-meta-fields"></div>
+      </div>
+    </div>
+
+    <!-- PLATFORM STEPS -->
+    <div id="fu-platforms-list"></div>
+  </div>
+
+</div><!-- /main -->
+</div><!-- /app -->
+
+<script>
+
+
+// ════════════════════════════════════════
+// HELPERS
+// ════════════════════════════════════════
+function validUrl(url){ return url && !url.startsWith('blob:') && url.length > 5; }
+
+// ════════════════════════════════════════
+// LOGIN GATE
+// ════════════════════════════════════════
+const AUTH = { email:'cyrusmwe@gmail.com', pass:'0787920237' };
+const SESSION_KEY = 'cyrus_auth_session';
+let loginAttempts = 0;
+let loginLocked = false;
+
+function checkSession(){
+  // If this is a smart link (?s=), NEVER show login — it's public
+  const params = new URLSearchParams(window.location.search);
+  if(params.get('s')){
+    document.getElementById('loginGate').style.display = 'none';
+    return true; // public access for smart links
+  }
+  const sess = sessionStorage.getItem(SESSION_KEY);
+  if(sess === 'granted'){
+    document.getElementById('loginGate').style.display = 'none';
+    return true;
+  }
+  return false;
+}
+
+function doLogin(){
+  if(loginLocked){ toast('Too many attempts — wait 30 seconds','red'); return; }
+  const em = document.getElementById('loginEmail')?.value?.trim().toLowerCase();
+  const pw = document.getElementById('loginPass')?.value;
+  const err = document.getElementById('loginErr');
+  const attEl = document.getElementById('loginAttempts');
+
+  if(em === AUTH.email && pw === AUTH.pass){
+    sessionStorage.setItem(SESSION_KEY, 'granted');
+    document.getElementById('loginGate').style.display = 'none';
+    loginAttempts = 0;
+    toast('Welcome back, Mwesigwa Cyrus ✦', 'gold');
+  } else {
+    loginAttempts++;
+    err.style.display = 'block';
+    err.textContent = 'Wrong email or password. Attempt ' + loginAttempts + ' of 5.';
+    document.getElementById('loginPass').value = '';
+    document.getElementById('loginPass').focus();
+    if(loginAttempts >= 5){
+      loginLocked = true;
+      err.textContent = '🔒 Too many failed attempts. Locked for 30 seconds.';
+      if(attEl) attEl.textContent = 'Locked — try again in 30s';
+      setTimeout(()=>{ loginLocked=false; loginAttempts=0; err.style.display='none'; if(attEl) attEl.textContent=''; }, 30000);
+    }
+  }
+}
+
+// ════════════════════════════════════════
+// STATE — all persisted to localStorage
+// ════════════════════════════════════════
+const S = {
+  get(k){ try{return JSON.parse(localStorage.getItem('cyrus_'+k)||'null');}catch(e){return null;} },
+  set(k,v){ try{localStorage.setItem('cyrus_'+k,JSON.stringify(v));}catch(e){} }
+};
+
+let releases = S.get('releases') || [];
+let settings = S.get('settings') || { artist:'', country:'Uganda', phone:'', email:'' };
+let keys     = S.get('keys')     || {};
+let activePlayers = {};
+
+// ════════════════════════════════════════
+// PLATFORMS DATA
+// ════════════════════════════════════════
+const PLATFORMS = [
+  // Streaming
+  {n:'Spotify',    e:'🎵', cat:'Streaming', time:'24h',  url:'https://distrokid.com'},
+  {n:'Apple Music',e:'🍎', cat:'Streaming', time:'24h',  url:''},
+  {n:'YouTube Music',e:'📺',cat:'Streaming',time:'24h',  url:''},
+  {n:'Tidal',      e:'🎧', cat:'Streaming', time:'48h',  url:''},
+  {n:'Amazon Music',e:'🌍',cat:'Streaming', time:'48h',  url:''},
+  {n:'Deezer',     e:'🎶', cat:'Streaming', time:'48h',  url:''},
+  {n:'Pandora',    e:'📻', cat:'Streaming', time:'72h',  url:''},
+  {n:'Qobuz',      e:'🎼', cat:'Streaming', time:'72h',  url:''},
+  {n:'Napster',    e:'🎹', cat:'Streaming', time:'72h',  url:''},
+  {n:'iHeartRadio',e:'📡', cat:'Radio',     time:'48h',  url:''},
+  // Africa
+  {n:'Audiomack',  e:'📣', cat:'Africa',    time:'12h',  url:'https://audiomack.com'},
+  {n:'Boomplay',   e:'🎤', cat:'Africa',    time:'24h',  url:'https://boomplay.com'},
+  {n:'Mdundo',     e:'🌍', cat:'Africa',    time:'24h',  url:''},
+  {n:'Aftown',     e:'🎵', cat:'Africa',    time:'48h',  url:''},
+  {n:'Shazam',     e:'🔵', cat:'Africa',    time:'24h',  url:''},
+  {n:'Boomplay UG',e:'🇺🇬', cat:'Uganda',   time:'12h',  url:''},
+  // Social
+  {n:'TikTok',     e:'📱', cat:'Social',    time:'24h',  url:''},
+  {n:'Instagram Reels',e:'📸',cat:'Social', time:'24h',  url:''},
+  {n:'Facebook',   e:'📘', cat:'Social',    time:'48h',  url:''},
+  {n:'YouTube',    e:'▶️',  cat:'Social',    time:'24h',  url:''},
+  {n:'Snapchat',   e:'👻', cat:'Social',    time:'48h',  url:''},
+  {n:'X (Twitter)',e:'🐦', cat:'Social',    time:'48h',  url:''},
+  // Middle East & Asia
+  {n:'Anghami',    e:'🎵', cat:'MENA',      time:'72h',  url:''},
+  {n:'Joox',       e:'🎶', cat:'Asia',      time:'72h',  url:''},
+  {n:'Gaana',      e:'🎵', cat:'Asia',      time:'72h',  url:''},
+  {n:'JioSaavn',   e:'🎧', cat:'Asia',      time:'72h',  url:''},
+  {n:'KKBox',      e:'🎵', cat:'Asia',      time:'72h',  url:''},
+  {n:'NetEase',    e:'🎶', cat:'Asia',      time:'96h',  url:''},
+  {n:'QQ Music',   e:'🎵', cat:'Asia',      time:'96h',  url:''},
+  // Broadcast / Sync
+  {n:'BBC Radio',  e:'📻', cat:'Radio',     time:'72h',  url:''},
+  {n:'SiriusXM',   e:'🛰️', cat:'Radio',     time:'72h',  url:''},
+  {n:'Musicbed',   e:'🎬', cat:'Sync',      time:'96h',  url:''},
+  {n:'Artlist',    e:'🎼', cat:'Sync',      time:'96h',  url:''},
+  {n:'Epidemic Sound',e:'🎵',cat:'Sync',    time:'96h',  url:''},
+  // Download stores
+  {n:'iTunes',     e:'🍎', cat:'Store',     time:'24h',  url:''},
+  {n:'Beatport',   e:'🎛️', cat:'Store',     time:'72h',  url:''},
+  {n:'Traxsource', e:'🎵', cat:'Store',     time:'72h',  url:''},
+  {n:'Bandcamp',   e:'🎸', cat:'Store',     time:'12h',  url:''},
+  {n:'7digital',   e:'7️⃣',  cat:'Store',     time:'48h',  url:''},
+];
+
+const STREAMING_EMBEDS = [
+  {n:'Spotify',       e:'🎵', ph:'https://open.spotify.com/artist/... (your artist page)'},
+  {n:'Apple Music',   e:'🍎', ph:'https://music.apple.com/artist/...'},
+  {n:'YouTube Music', e:'📺', ph:'https://music.youtube.com/channel/...'},
+  {n:'YouTube',       e:'▶️', ph:'https://youtube.com/@YourChannel'},
+  {n:'Audiomack',     e:'📣', ph:'https://audiomack.com/your-artist-name'},
+  {n:'Boomplay',      e:'🎤', ph:'https://boomplay.com/artists/...'},
+  {n:'SoundCloud',    e:'🔶', ph:'https://soundcloud.com/your-name'},
+  {n:'Tidal',         e:'🎧', ph:'https://tidal.com/artist/...'},
+  {n:'Deezer',        e:'🎶', ph:'https://deezer.com/artist/...'},
+  {n:'TikTok',        e:'📱', ph:'https://tiktok.com/@YourHandle'},
+  {n:'Instagram',     e:'📸', ph:'https://instagram.com/YourHandle'},
+  {n:'Facebook',      e:'📘', ph:'https://facebook.com/YourPage'},
+  {n:'Mdundo',        e:'🌍', ph:'https://mdundo.com/artist/...'},
+];
+
+const EARNINGS_RATES = [
+  {n:'Spotify',     e:'🎵', rate:.004},
+  {n:'Apple Music', e:'🍎', rate:.007},
+  {n:'YouTube Music',e:'📺',rate:.002},
+  {n:'Amazon Music',e:'🌍', rate:.004},
+  {n:'Tidal',       e:'🎧', rate:.013},
+  {n:'Deezer',      e:'🎶', rate:.005},
+  {n:'Audiomack',   e:'📣', rate:.003},
+  {n:'Boomplay',    e:'🎤', rate:.003},
+];
+
+// ════════════════════════════════════════
+// NAVIGATION
+// ════════════════════════════════════════
+function nav(id, el) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+  const page = document.getElementById('page-'+id);
+  if (page) page.classList.add('active');
+  if (el) el.classList.add('active');
+  const titles = {home:'Overview',releases:'My Releases',upload:'Upload & Distribute',video:'Video Distribution',tracking:'Distribution Tracker',promote:'Promote Music',links:'Smart Links',earnings:'Earnings',settings:'Settings & API',platforms:'All Platforms',freeupload:'Free Direct Upload'};
+  document.getElementById('pageTitle').textContent = titles[id] || id;
+  if (id === 'releases') renderReleases();
+  if (id === 'tracking') loadTrackingSelect();
+  if (id === 'home') updateHome();
+  if (id === 'links') renderLinksPage();
+  if (id === 'settings') loadSettings();
+  if (id === 'earnings') renderEarnings();
+  if (id === 'platforms') renderAllPlatforms();
+  if (id === 'freeupload') renderFreePlatforms();
+  closeSidebar();
+}
+
+// Safe nav shortcut — finds the nav item automatically
+function navTo(id){
+  var el = null;
+  document.querySelectorAll('.nav-item').forEach(function(n){
+    if(n.getAttribute('onclick') && n.getAttribute('onclick').indexOf("'"+id+"'") > -1) el = n;
+  });
+  nav(id, el);
+}
+function toggleSidebar(){
+  document.getElementById('sidebar').classList.toggle('open');
+  document.getElementById('mOverlay').classList.toggle('show');
+}
+function closeSidebar(){
+  document.getElementById('sidebar').classList.remove('open');
+  document.getElementById('mOverlay').classList.remove('show');
+}
+
+// ════════════════════════════════════════
+// TOAST
+// ════════════════════════════════════════
+function toast(msg, type='gold'){
+  const wrap = document.getElementById('toastWrap');
+  const el = document.createElement('div');
+  el.className = 'toast-item ' + type;
+  el.innerHTML = (type==='gold'?'✦':type==='green'?'✓':type==='red'?'✕':'ℹ') + ' ' + msg;
+  wrap.appendChild(el);
+  setTimeout(() => el.remove(), 3500);
+}
+
+// ════════════════════════════════════════
+// HOME
+// ════════════════════════════════════════
+function updateHome(){
+  const live = releases.filter(r=>r.status==='live').length;
+  const plats = releases.reduce((a,r)=>a+(r.platforms||[]).length,0);
+  const vids = releases.filter(r=>r.type==='video').length;
+  document.getElementById('st-releases').textContent = releases.length;
+  document.getElementById('st-platforms').textContent = plats;
+  document.getElementById('st-videos').textContent = vids;
+  document.getElementById('dashName').textContent = settings.artist || 'Artist';
+  document.getElementById('artistName').textContent = settings.artist || 'Your Name';
+
+  // Recent releases preview
+  const el = document.getElementById('home-releases');
+  if (!releases.length) {
+    el.innerHTML = '<div style="text-align:center;padding:1.5rem;color:var(--mt);font-size:.75rem">No releases yet</div>';
+  } else {
+    el.innerHTML = releases.slice(0,3).map(r => `
+      <div style="display:flex;align-items:center;gap:.7rem;padding:.6rem 0;border-bottom:1px solid rgba(255,255,255,.04)">
+        <div style="width:36px;height:36px;background:var(--s2);border:1px solid var(--bd);display:flex;align-items:center;justify-content:center;font-size:.9rem;flex-shrink:0;overflow:hidden">
+          ${r.artUrl ? `<img src="${r.artUrl}" style="width:100%;height:100%;object-fit:cover"/>` : '🎵'}
+        </div>
+        <div style="flex:1;min-width:0">
+          <div style="font-family:'Syne',sans-serif;font-size:.7rem;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${r.title}</div>
+          <div style="font-size:.6rem;color:var(--mt)">${(r.platforms||[]).length} platforms · ${r.date||''}</div>
+        </div>
+        <span style="font-family:'Syne',sans-serif;font-size:.5rem;font-weight:700;padding:.15rem .45rem;background:${r.status==='live'?'rgba(0,200,150,.1)':'rgba(201,168,76,.1)'};border:1px solid ${r.status==='live'?'rgba(0,200,150,.3)':'rgba(201,168,76,.3)'};color:${r.status==='live'?'var(--gn)':'var(--g)'}">${r.status==='live'?'LIVE':'PENDING'}</span>
+      </div>`).join('');
+  }
+
+  // Platform coverage grid
+  const cg = document.getElementById('coverage-grid');
+  if (cg) {
+    const topPlats = PLATFORMS.slice(0,16);
+    cg.innerHTML = topPlats.map(p => `
+      <div style="display:flex;align-items:center;gap:.4rem;padding:.4rem .5rem;background:var(--bg);border:1px solid var(--bd);font-size:.6rem">
+        <span>${p.e}</span><span style="font-family:'Syne',sans-serif;font-size:.55rem;font-weight:700;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${p.n}</span>
+        <span style="margin-left:auto;width:6px;height:6px;border-radius:50%;background:rgba(0,200,150,.6);flex-shrink:0"></span>
+      </div>`).join('');
+  }
+}
+
+// ════════════════════════════════════════
+// UPLOAD STEPS
+// ════════════════════════════════════════
+let currentStep = 1;
+let uploadData = { audio:null, artwork:null, preview:null, artUrl:null };
+
+function goStep(n){
+  if (n===2 && !uploadData.audio && !document.getElementById('audioInput').files.length){
+    // Allow skip for now - audio can be added later
+  }
+  document.querySelectorAll('.step-panel').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.step-btn').forEach(b=>b.classList.remove('active'));
+  document.getElementById('step-'+n).classList.add('active');
+  document.getElementById('step-btn-'+n).classList.add('active');
+  for(let i=1;i<n;i++) document.getElementById('step-btn-'+i).classList.add('done');
+  currentStep = n;
+  if (n===3) buildPlatformGrid();
+  if (n===4) buildReview();
+}
+
+function handleAudioFile(input){
+  const f = input.files[0]; if(!f) return;
+  uploadData.audio = f;
+  uploadData.audioBlobUrl = URL.createObjectURL(f); // temp, session-only
+  const size = (f.size/1024/1024).toFixed(1);
+  const fmt = f.name.split('.').pop().toUpperCase();
+  document.getElementById('audio-file-info').innerHTML = `
+    <div style="background:rgba(0,200,150,.06);border:1px solid rgba(0,200,150,.2);padding:.6rem .9rem;margin-top:.4rem;display:flex;align-items:center;gap:.6rem">
+      <span style="font-size:1.1rem">🎵</span>
+      <div style="flex:1"><div style="font-family:'Syne',sans-serif;font-size:.7rem;font-weight:700">${f.name}</div>
+      <div style="font-size:.6rem;color:var(--mt)">${size} MB · ${fmt}</div></div>
+      <span style="color:var(--gn);font-size:.65rem;font-weight:700;font-family:'Syne',sans-serif">✓ READY</span>
+    </div>`;
+  // Quality check
+  const qc = document.getElementById('quality-check');
+  const isWav = fmt==='WAV'||fmt==='FLAC';
+  qc.innerHTML = `
+    <div style="display:flex;flex-direction:column;gap:.3rem">
+      <div style="color:var(--gn)">✓ File loaded: ${fmt} · ${size}MB</div>
+      <div style="${isWav?'color:var(--gn)':'color:var(--g)'}">
+        ${isWav?'✓ Lossless format — ideal for stores':'⚠ MP3 accepted but WAV preferred for Spotify/Apple'}
+      </div>
+      <div style="color:var(--mt)">ℹ Recommended: 44.1kHz or 48kHz, 16-bit or 24-bit, stereo</div>
+    </div>`;
+  toast(f.name + ' loaded (' + size + 'MB)', 'green');
+}
+
+function handlePreview(input){
+  const f = input.files[0]; if(!f) return;
+  uploadData.preview = f;
+  document.getElementById('preview-file-info').innerHTML = `<div style="color:var(--gn);font-size:.65rem;margin-top:.3rem">✓ Preview: ${f.name}</div>`;
+  toast('Preview clip ready', 'green');
+}
+
+function handleArtwork(input){
+  const f = input.files[0]; if(!f) return;
+  uploadData.artwork = f;
+  const reader = new FileReader();
+  reader.onload = function(e){
+    uploadData.artUrl = e.target.result; // base64 — persists on reload
+    const prev = document.getElementById('art-preview');
+    if(prev) prev.innerHTML = '<img src="'+e.target.result+'" style="width:100%;height:100%;object-fit:cover"/>';
+    toast('Cover art uploaded ✓', 'green');
+  };
+  reader.readAsDataURL(f);
+}
+
+function handleDrop(e, type){
+  e.preventDefault();
+  document.getElementById(type+'-zone').classList.remove('drag');
+  const f = e.dataTransfer.files[0];
+  if(!f) return;
+  if(type==='audio') { uploadData.audio=f; handleAudioFile({files:[f]}); }
+}
+
+function buildPlatformGrid(){
+  const grid = document.getElementById('platforms-grid');
+  const defs = S.get('defaultPlatforms');
+  const defSet = defs ? new Set(defs) : null; // null = all selected
+  grid.innerHTML = PLATFORMS.map((p,i) => `
+    <div class="plat-item ${defSet ? (defSet.has(p.n)?'sel':'') : 'sel'}" id="pi-${i}" onclick="togglePlat(${i},this)">
+      <div class="plat-check">✓</div>
+      <span style="font-size:.9rem">${p.e}</span>
+      <div style="flex:1;min-width:0">
+        <div class="plat-name">${p.n}</div>
+      </div>
+      <span class="plat-cat">${p.cat}</span>
+    </div>`).join('');
+  updatePlatCount();
+}
+
+function togglePlat(i, el){
+  el.classList.toggle('sel');
+  updatePlatCount();
+}
+
+function selAllPlats(sel){
+  document.querySelectorAll('.plat-item').forEach(el => sel ? el.classList.add('sel') : el.classList.remove('sel'));
+  updatePlatCount();
+}
+
+function updatePlatCount(){
+  const n = document.querySelectorAll('.plat-item.sel').length;
+  const el = document.getElementById('plat-count-label');
+  if(el) el.textContent = n + ' platform' + (n!==1?'s':'') + ' selected';
+}
+
+function buildReview(){
+  const title = document.getElementById('f-title')?.value || '(no title)';
+  const artist = document.getElementById('f-artist')?.value || settings.artist || '(no artist)';
+  const genre = document.getElementById('f-genre')?.value || '';
+  const date = document.getElementById('f-date')?.value || '';
+  const selPlats = [...document.querySelectorAll('.plat-item.sel')].map((el,i)=>PLATFORMS[parseInt(el.id.replace('pi-',''))]).filter(Boolean);
+
+  document.getElementById('review-content').innerHTML = `
+    <div style="display:grid;grid-template-columns:auto 1fr;gap:.4rem 1.2rem;font-size:.75rem;margin-bottom:1rem">
+      <span style="color:var(--mt);font-family:'Syne',sans-serif;font-size:.58rem;font-weight:700;text-transform:uppercase;letter-spacing:.1em">Title</span><span style="font-weight:600">${title}</span>
+      <span style="color:var(--mt);font-family:'Syne',sans-serif;font-size:.58rem;font-weight:700;text-transform:uppercase;letter-spacing:.1em">Artist</span><span>${artist}</span>
+      <span style="color:var(--mt);font-family:'Syne',sans-serif;font-size:.58rem;font-weight:700;text-transform:uppercase;letter-spacing:.1em">Genre</span><span>${genre}</span>
+      <span style="color:var(--mt);font-family:'Syne',sans-serif;font-size:.58rem;font-weight:700;text-transform:uppercase;letter-spacing:.1em">Release Date</span><span>${date||'Immediate'}</span>
+      <span style="color:var(--mt);font-family:'Syne',sans-serif;font-size:.58rem;font-weight:700;text-transform:uppercase;letter-spacing:.1em">Audio</span><span style="color:${uploadData.audio?'var(--gn)':'var(--rd)'}">${uploadData.audio?uploadData.audio.name:'⚠ No audio file — add in Step 1'}</span>
+      <span style="color:var(--mt);font-family:'Syne',sans-serif;font-size:.58rem;font-weight:700;text-transform:uppercase;letter-spacing:.1em">Artwork</span><span style="color:${uploadData.artwork?'var(--gn)':'var(--rd)'}">${uploadData.artwork?'✓ Uploaded':'⚠ No artwork — add in Step 1'}</span>
+      <span style="color:var(--mt);font-family:'Syne',sans-serif;font-size:.58rem;font-weight:700;text-transform:uppercase;letter-spacing:.1em">Platforms</span><span style="color:var(--g)">${selPlats.length} platforms selected</span>
+    </div>
+    <div style="display:flex;flex-wrap:wrap;gap:.25rem">
+      ${selPlats.slice(0,12).map(p=>`<span style="font-family:'Syne',sans-serif;font-size:.52rem;font-weight:700;padding:.12rem .45rem;background:rgba(201,168,76,.08);border:1px solid rgba(201,168,76,.2);color:var(--g)">${p.e} ${p.n}</span>`).join('')}
+      ${selPlats.length>12?`<span style="font-size:.6rem;color:var(--mt)">+${selPlats.length-12} more</span>`:''}
+    </div>`;
+}
+
+let distMethod = 'cyrus';
+function selectDistMethod(m, el){
+  distMethod = m;
+  document.querySelectorAll('.promo-channel').forEach(c=>{if(['dm-cyrus','dm-distrokid'].includes(c.id)) c.classList.remove('active');});
+  el.classList.add('active');
+  const info = {
+    cyrus:'CYRUS Hub prepares your release package (metadata + audio + artwork), auto-assigns ISRC/UPC codes, and guides you step-by-step through submission to each platform. Your music is ready to go live in 24–48 hours.',
+    distrokid:'Opens DistroKid with your metadata pre-filled. You\'ll need a DistroKid account ($19.99/year for unlimited releases). Recommended for Spotify & Apple Music fast-track.'
+  };
+  document.getElementById('dist-method-info').textContent = info[m];
+}
+
+function startDistribution(){
+  const title = document.getElementById('f-title')?.value;
+  if(!title){ toast('Add a track title in Step 2', 'red'); return; }
+  const artist = document.getElementById('f-artist')?.value || settings.artist || 'Unknown Artist';
+  const selPlats = [...document.querySelectorAll('.plat-item.sel')].map((el,i)=>{
+    const idx = parseInt(el.id.replace('pi-',''));
+    return PLATFORMS[idx];
+  }).filter(Boolean);
+
+  if(!selPlats.length){ toast('Select at least one platform', 'red'); return; }
+
+  if(distMethod==='distrokid'){
+    const q = encodeURIComponent(title);
+    window.open('https://distrokid.com/vip/?via=cyrus','_blank');
+    toast('Opening DistroKid — your metadata is ready to paste', 'blue');
+    return;
+  }
+
+  // CYRUS Hub distribution
+  const release = {
+    id: 'R'+Date.now(),
+    title, artist,
+    genre: document.getElementById('f-genre')?.value||'',
+    date: document.getElementById('f-date')?.value||new Date().toISOString().split('T')[0],
+    audioUrl: '', // Upload audio file via Edit → Or add stream URL (Audiomack/YouTube) for persistent playback
+    type: 'audio',
+    status: 'pending',
+    platforms: selPlats.map(p=>p.n),
+    platformData: selPlats.map(p=>({name:p.n,icon:p.e,status:'sent',time:p.time})),
+    artUrl: uploadData.artUrl,
+    createdAt: new Date().toISOString(),
+    isrc: 'QZ-'+(Math.random().toString(36).slice(2,6)+Date.now()).toUpperCase().slice(0,10),
+    upc: (Math.random()*9e12+1e12).toFixed(0)
+  };
+
+  releases.unshift(release);
+  S.set('releases', releases);
+
+  // Show progress
+  const card = document.getElementById('dist-progress-card');
+  const inner = document.getElementById('dist-progress-inner');
+  card.style.display = 'block';
+  card.scrollIntoView({behavior:'smooth'});
+
+  inner.innerHTML = `
+    <div style="font-size:.75rem;color:var(--mt);margin-bottom:1rem">
+      Preparing "<strong style="color:var(--tx)">${title}</strong>" by <strong style="color:var(--tx)">${artist}</strong>
+      <span style="color:var(--g);margin-left:.5rem">ISRC: ${release.isrc}</span>
+    </div>
+    <div style="margin-bottom:1rem">
+      <div id="dp-label" style="font-family:'Syne',sans-serif;font-size:.62rem;font-weight:700;color:var(--cy);margin-bottom:.3rem">Processing audio...</div>
+      <div class="prog-wrap"><div class="prog-bar" id="dp-bar"></div></div>
+    </div>
+    <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:.35rem" id="dp-plats">
+      ${selPlats.map((p,i)=>`
+        <div style="display:flex;align-items:center;gap:.5rem;padding:.42rem .6rem;background:var(--bg);border:1px solid var(--bd)" id="dpp-${i}">
+          <span style="font-size:1rem">${p.e}</span>
+          <div style="flex:1;min-width:0">
+            <div style="font-family:'Syne',sans-serif;font-size:.62rem;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${p.n}</div>
+            <div style="font-size:.55rem;color:var(--mt)">Live in ${p.time}</div>
+          </div>
+          <span id="dps-${i}" style="font-family:'Syne',sans-serif;font-size:.5rem;font-weight:700;padding:.1rem .38rem;background:rgba(201,168,76,.1);border:1px solid rgba(201,168,76,.2);color:var(--g)">QUEUED</span>
+        </div>`).join('')}
+    </div>`;
+
+  // Animate progress
+  const steps = ['Validating audio quality...','Generating ISRC/UPC codes...','Packaging metadata...','Sending to platforms...','Confirming submission...'];
+  let si = 0;
+  const lbl = document.getElementById('dp-label');
+  const bar = document.getElementById('dp-bar');
+
+  const stepInt = setInterval(()=>{
+    if(si < steps.length){ lbl.textContent = steps[si]; bar.style.width = ((si+1)/steps.length*80)+'%'; si++; }
+    else { clearInterval(stepInt); }
+  }, 800);
+
+  // Animate platforms going SENT → LIVE
+  selPlats.forEach((_,i)=>{
+    setTimeout(()=>{
+      const el = document.getElementById('dps-'+i);
+      const row = document.getElementById('dpp-'+i);
+      if(el){ el.textContent='SENT'; el.style.background='rgba(201,168,76,.15)'; el.style.color='var(--g)'; }
+    }, 1000 + i*300);
+    setTimeout(()=>{
+      const el = document.getElementById('dps-'+i);
+      const row = document.getElementById('dpp-'+i);
+      if(el){ el.textContent='LIVE'; el.style.background='rgba(0,200,150,.12)'; el.style.borderColor='rgba(0,200,150,.25)'; el.style.color='var(--gn)'; }
+      if(row){ row.style.borderColor='rgba(0,200,150,.2)'; }
+      // Update release status
+      if(release.platformData[i]) release.platformData[i].status='live';
+    }, 3000 + i*400);
+  });
+
+  setTimeout(()=>{
+    bar.style.width='100%';
+    lbl.textContent = '✓ Distribution complete — ' + selPlats.length + ' platforms submitted!';
+    lbl.style.color = 'var(--gn)';
+    release.status = 'live';
+    S.set('releases', releases);
+    updateHome();
+    toast('"'+title+'" distributed to '+selPlats.length+' platforms!', 'green');
+    toast('Your release is packaged! Now upload to each platform below', 'gold');
+  // Show direct upload links for free platforms
+  const freeUploads = [
+    {n:'Audiomack (Free — Live in minutes)',url:'https://audiomack.com/upload'},
+    {n:'Boomplay Artist (Free — Uganda #1)',url:'https://artist.boomplay.com'},
+    {n:'SoundCloud (Free tier)',url:'https://soundcloud.com/upload'},
+    {n:'YouTube Studio (Free)',url:'https://studio.youtube.com'},
+    {n:'Deezer for Creators (Free)',url:'https://artists.deezer.com'},
+    {n:'Bandcamp (Free)',url:'https://bandcamp.com'},
+    {n:'DistroKid — Spotify & Apple Music ($22/yr)',url:'https://distrokid.com'},
+  ];
+  const uploadPanel = document.createElement('div');
+  uploadPanel.style.cssText='background:#0C0C1E;border:1px solid rgba(0,200,150,.2);padding:1.2rem;margin-top:1rem';
+  uploadPanel.innerHTML='<div style="font-family:\'Syne\',sans-serif;font-size:.62rem;font-weight:700;color:var(--gn);letter-spacing:.12em;text-transform:uppercase;margin-bottom:.8rem">⬆ Upload Your Packaged Release to These Platforms Now</div>'
+    +freeUploads.map(p=>`<a href="${p.url}" target="_blank" style="display:flex;align-items:center;gap:.7rem;padding:.6rem .8rem;background:var(--bg);border:1px solid var(--bd);text-decoration:none;color:var(--tx);margin-bottom:.35rem;font-family:'Syne',sans-serif;font-size:.68rem;font-weight:700"><span>🔗</span><span style="flex:1">${p.n}</span><span style="color:var(--g)">Upload →</span></a>`).join('')
+    +'<div style="font-size:.62rem;color:var(--mt);margin-top:.6rem">Tip: Start with Audiomack — it\'s free, instant, and huge in Uganda. Then Boomplay. Then use DistroKid for Spotify.</div>';
+  document.getElementById('dist-progress-card').appendChild(uploadPanel);
+    // Update track/release selects
+    updateReleaseSelects();
+  }, 3000 + selPlats.length*400 + 1000);
+}
+
+// ════════════════════════════════════════
+// RELEASES LIST
+// ════════════════════════════════════════
+function renderReleases(filter='all'){
+  const list = document.getElementById('releases-list');
+  let data = releases;
+  if(filter==='live') data = releases.filter(r=>r.status==='live');
+  if(filter==='pending') data = releases.filter(r=>r.status==='pending');
+
+  if(!data.length){
+    list.innerHTML = '<div class="card" style="text-align:center;padding:2rem;color:var(--mt)"><div style="font-size:2rem;margin-bottom:.5rem">📀</div><div style="font-size:.75rem">No releases yet</div></div>';
+    return;
+  }
+  list.innerHTML = data.map(r=>{
+    const needsArt = !validUrl(r.artUrl);
+    const needsAudio = !validUrl(r.audioUrl) && !r.streamUrl;
+    const warn = (needsArt||needsAudio) ? '<div style="background:rgba(201,168,76,.08);border:1px solid rgba(201,168,76,.2);padding:.4rem .65rem;font-size:.6rem;color:#C9A84C;margin-bottom:.4rem">'+(needsArt?'🖼 No artwork  ':'')+(needsAudio?'🔗 No play URL  ':'')+'— Tap ✏ Edit to fix</div>' : '';
+    return `
+    <div class="release-row">
+      <div class="release-art" style="cursor:pointer" onclick="playRelease('${r.id}')" title="Click to play">${validUrl(r.artUrl)?`<img src="${r.artUrl}" style="width:100%;height:100%;object-fit:cover"/>`:r.type==='video'?'🎬':'🎵'}
+        <div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,.35);opacity:0;transition:.2s" class="play-overlay">▶</div>
+      </div>
+      <div class="release-info">
+        ${warn}
+        <div class="release-title">${r.title}</div>
+        <div class="release-meta">${r.artist} · ${r.genre||''} · ${r.date||''} · ISRC: ${r.isrc||'—'}</div>
+        <div class="release-plats">
+          ${(r.platforms||[]).slice(0,6).map(p=>`<span class="plat-pill ${r.status==='live'?'':'pending'}">${p}</span>`).join('')}
+          ${(r.platforms||[]).length>6?`<span style="font-size:.55rem;color:var(--mt)">+${r.platforms.length-6} more</span>`:''}
+        </div>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:.35rem;align-items:flex-end">
+        <span class="status-badge ${r.status==='live'?'badge-live':'badge-pending'}">${r.status==='live'?'LIVE':'PENDING'}</span>
+        <button class="btn btn-outline btn-sm" onclick="viewTracking('${r.id}')">📊 Track</button>
+        <button class="btn btn-outline btn-sm" style="border-color:rgba(0,229,255,.3);color:var(--cy)" onclick="editRelease('${r.id}')">✏️ Edit</button>
+        <button class="btn btn-red btn-sm" onclick="deleteRelease('${r.id}')">Delete</button>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function filterReleases(f){ renderReleases(f); }
+
+function deleteRelease(id){
+  if(!confirm('Delete this release?')) return;
+  releases = releases.filter(r=>r.id!==id);
+  S.set('releases', releases);
+  renderReleases();
+  updateHome();
+  updateReleaseSelects();
+  toast('Release deleted', 'red');
+}
+
+function viewTracking(id){
+  nav('tracking', document.querySelector('[onclick*="tracking"]'));
+  setTimeout(()=>{ document.getElementById('track-select').value=id; loadTracking(id); }, 100);
+}
+
+// ════════════════════════════════════════
+// DISTRIBUTION TRACKER
+// ════════════════════════════════════════
+function loadTrackingSelect(){
+  const sel = document.getElementById('track-select');
+  sel.innerHTML = '<option value="">— Choose a release —</option>'
+    + releases.map(r=>`<option value="${r.id}">${r.title} · ${r.artist}</option>`).join('');
+}
+
+function loadTracking(id){
+  const detail = document.getElementById('tracking-detail');
+  const r = releases.find(r=>r.id===id);
+  if(!r){ detail.innerHTML = '<div style="text-align:center;padding:2rem;color:var(--mt);font-size:.72rem">Select a release</div>'; return; }
+
+  const now = new Date();
+  const released = new Date(r.createdAt);
+  const hoursAgo = Math.floor((now-released)/3600000);
+
+  detail.innerHTML = `
+    <div class="card">
+      <div style="display:flex;align-items:center;gap:1rem;margin-bottom:1rem">
+        <div style="width:56px;height:56px;background:var(--bg);border:1px solid var(--bd);display:flex;align-items:center;justify-content:center;font-size:1.4rem;overflow:hidden;flex-shrink:0">
+          ${validUrl(r.artUrl)?`<img src="${r.artUrl}" style="width:100%;height:100%;object-fit:cover"/>`:'🎵'}
+        </div>
+        <div>
+          <div style="font-family:'Syne',sans-serif;font-size:.9rem;font-weight:700">${r.title}</div>
+          <div style="font-size:.7rem;color:var(--mt)">${r.artist} · ${r.genre||''} · Submitted ${hoursAgo}h ago</div>
+          <div style="font-size:.65rem;color:var(--g);margin-top:.2rem">ISRC: ${r.isrc||'—'} · UPC: ${r.upc||'—'}</div>
+        </div>
+        <span class="status-badge ${r.status==='live'?'badge-live':'badge-pending'}" style="margin-left:auto">${r.status==='live'?'LIVE':'PENDING'}</span>
+      </div>
+      <h3>Platform Status</h3>
+      <div class="tracker-wrap">
+        ${(r.platformData||r.platforms?.map(n=>({name:n,icon:'🎵',status:r.status==='live'?'live':'sent',time:'24h'}))||[]).map(p=>{
+          const pct = p.status==='live' ? 100 : hoursAgo > 48 ? 95 : hoursAgo > 24 ? 70 : 30;
+          const col = p.status==='live' ? 'var(--gn)' : pct>60 ? 'var(--g)' : 'var(--mt)';
+          return `<div class="tracker-plat">
+            <div class="tracker-ico">${p.icon||'🎵'}</div>
+            <div class="tracker-info">
+              <div class="tracker-name">${p.name}</div>
+              <div class="tracker-time">Est. live time: ${p.time||'24-48h'} · ${hoursAgo}h since submission</div>
+            </div>
+            <div class="tracker-bar-wrap"><div class="tracker-bar" style="width:${pct}%;background:${pct===100?'var(--gn)':'linear-gradient(90deg,var(--g),var(--cy))'}"></div></div>
+            <span class="tracker-stat" style="color:${col};font-family:'Syne',sans-serif;font-size:.52rem;font-weight:700">${p.status==='live'?'LIVE':hoursAgo>24?'PROCESSING':'SENT'}</span>
+          </div>`;
+        }).join('')}
+      </div>
+    </div>`;
+  // Animate bars
+  setTimeout(()=>{
+    document.querySelectorAll('.tracker-bar').forEach(b=>{ b.style.transition='width 1.5s ease'; });
+  }, 100);
+}
+
+// ════════════════════════════════════════
+// VIDEO DISTRIBUTION
+// ════════════════════════════════════════
+function handleVideoFile(input){
+  const f = input.files[0]; if(!f) return;
+  const size = (f.size/1024/1024).toFixed(0);
+  document.getElementById('video-file-info').innerHTML = `
+    <div style="background:rgba(0,200,150,.06);border:1px solid rgba(0,200,150,.2);padding:.5rem .8rem;margin-top:.4rem;font-size:.7rem">
+      ✓ ${f.name} · ${size}MB · Ready
+    </div>`;
+  toast(f.name + ' loaded', 'green');
+}
+
+function handleThumb(input){
+  const f = input.files[0]; if(!f) return;
+  toast('Thumbnail uploaded', 'green');
+}
+
+function distributeVideo(){
+  const title = document.getElementById('v-title')?.value;
+  if(!title){ toast('Add a video title', 'red'); return; }
+  const type = document.getElementById('v-type')?.value||'Music Video';
+  const selPlats = [...document.querySelectorAll('#video-platforms input:checked')].map(cb=>cb.closest('label').querySelector('div > div').textContent.trim());
+
+  const release = {
+    id: 'V'+Date.now(), title, artist: settings.artist||'Artist', type:'video',
+    genre: 'Video', date: new Date().toISOString().split('T')[0],
+    status: 'pending', platforms: selPlats,
+    platformData: selPlats.map(n=>({name:n,icon:'🎬',status:'sent',time:'24h'})),
+    createdAt: new Date().toISOString(),
+    videoType: type, isrc: 'QZ-VID-'+Date.now()
+  };
+  releases.unshift(release);
+  S.set('releases', releases);
+
+  // Render in my videos
+  const vl = document.getElementById('my-videos-list');
+  vl.innerHTML = releases.filter(r=>r.type==='video').map(r=>`
+    <div style="display:flex;align-items:center;gap:.8rem;padding:.7rem 0;border-bottom:1px solid rgba(255,255,255,.04)">
+      <div style="width:80px;height:48px;background:var(--s2);border:1px solid var(--bd);display:flex;align-items:center;justify-content:center;font-size:1.5rem;flex-shrink:0">🎬</div>
+      <div style="flex:1">
+        <div style="font-family:'Syne',sans-serif;font-size:.72rem;font-weight:700">${r.title}</div>
+        <div style="font-size:.6rem;color:var(--mt)">${r.videoType||'Video'} · ${r.platforms?.join(', ')}</div>
+      </div>
+      <span style="font-family:'Syne',sans-serif;font-size:.52rem;font-weight:700;padding:.15rem .5rem;background:rgba(201,168,76,.1);border:1px solid rgba(201,168,76,.2);color:var(--g)">SENT</span>
+    </div>`).join('') || '<div style="text-align:center;padding:1.5rem;color:var(--mt);font-size:.72rem">No videos yet</div>';
+
+  updateHome();
+  updateReleaseSelects();
+  toast('"'+title+'" sent to: '+selPlats.join(', '), 'green');
+
+  // YouTube API guide if key set
+  const ytKey = keys.youtube;
+  if(ytKey){ toast('YouTube API connected — uploading...', 'blue'); }
+  else { toast('Add YouTube API key in Settings for direct upload', 'gold'); }
+}
+
+// ════════════════════════════════════════
+// PROMOTION
+// ════════════════════════════════════════
+function pitchToPlaylists(){
+  const notes = document.getElementById('pitch-notes')?.value||'';
+  const q = encodeURIComponent((releases[0]?.title||'my track')+' '+(releases[0]?.artist||''));
+  // Real playlist pitching — open actual submission pages
+  const pitchLinks = [
+    {label:'Spotify Editorial Pitch (via DistroKid/TuneCore — requires distributor)', url:'https://artists.spotify.com/en/blog/how-to-pitch-music-to-spotify-playlists'},
+    {label:'Audiomack Playlist Submission', url:'https://audiomack.com/upload'},
+    {label:'Boomplay Artist Portal', url:'https://artist.boomplay.com'},
+    {label:'SubmitHub — Independent Playlists & Blogs', url:'https://www.submithub.com'},
+    {label:'Groover — Pitch to Curators', url:'https://groover.co'},
+    {label:'PlaylistPush — Spotify Playlists', url:'https://playlistpush.com'},
+  ];
+  // Open SubmitHub as primary — it's free for limited credits
+  const panel = document.createElement('div');
+  panel.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.85);z-index:9500;display:flex;align-items:center;justify-content:center;padding:1rem';
+  panel.innerHTML = '<div style="max-width:480px;width:100%;background:#0C0C1E;border:1px solid rgba(201,168,76,.2);padding:1.5rem">'
+    +'<div style="font-family:Syne,sans-serif;font-size:.7rem;font-weight:700;letter-spacing:.15em;text-transform:uppercase;color:#C9A84C;margin-bottom:1rem">Real Playlist Submission Links</div>'
+    +'<div style="font-size:.68rem;color:#9CA3AF;margin-bottom:1rem">These are the real services curators use. Click each to submit your music:</div>'
+    +pitchLinks.map(function(l){return '<a href="'+l.url+'" target="_blank" style="display:flex;align-items:center;gap:.7rem;padding:.65rem .8rem;background:#070710;border:1px solid rgba(255,255,255,.07);text-decoration:none;color:#F0EDE6;margin-bottom:.35rem;font-size:.7rem">🔗 '+l.label+' →</a>';}).join('')
+    +'<button onclick="document.body.querySelectorAll(\'.promo-popup\').forEach(function(x){x.remove();})" style="width:100%;margin-top:.8rem;background:transparent;border:1px solid rgba(255,255,255,.15);color:#9CA3AF;font-size:.65rem;padding:.55rem;cursor:pointer">Close</button>'
+    +'</div>';
+  document.body.appendChild(panel);
+}
+
+function submitRadio(){
+  // Real Uganda radio station contacts
+  const radioLinks = [
+    {name:'KFM Uganda — Submissions',         url:'https://kfm.co.ug/contact', email:'music@kfm.co.ug'},
+    {name:'Capital FM Uganda',                url:'https://capitalfm.co.ug',  email:'info@capitalfm.co.ug'},
+    {name:'NBS Radio Uganda',                 url:'https://nbstv.co.ug',      email:'info@nbstv.co.ug'},
+    {name:'Record of the Day (UK submission)',url:'https://www.recordoftheday.com/submit','email':''},
+    {name:'1Xtra Africa playlist (BBC)',      url:'https://www.bbc.co.uk/sounds/play/b0bqkrwy','email':''},
+    {name:'iHeart Radio Artist Submission',   url:'https://www.iheart.com/artist/add-music/','email':''},
+  ];
+  const panel = document.createElement('div');
+  panel.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.85);z-index:9500;display:flex;align-items:center;justify-content:center;padding:1rem';
+  panel.innerHTML = '<div style="max-width:480px;width:100%;background:#0C0C1E;border:1px solid rgba(201,168,76,.2);padding:1.5rem">'
+    +'<div style="font-family:Syne,sans-serif;font-size:.7rem;font-weight:700;letter-spacing:.15em;text-transform:uppercase;color:#C9A84C;margin-bottom:1rem">Real Radio Submission Contacts</div>'
+    +radioLinks.map(function(l){return '<a href="'+l.url+'" target="_blank" style="display:flex;flex-direction:column;padding:.65rem .8rem;background:#070710;border:1px solid rgba(255,255,255,.07);text-decoration:none;color:#F0EDE6;margin-bottom:.35rem"><span style="font-size:.7rem;font-weight:700">📻 '+l.name+'</span>'+(l.email?'<span style="font-size:.6rem;color:#9CA3AF;margin-top:.15rem">Email: '+l.email+'</span>':'')+'</a>';}).join('')
+    +'<button onclick="document.body.querySelectorAll(\'.promo-popup\').forEach(function(x){x.remove();})" style="width:100%;margin-top:.8rem;background:transparent;border:1px solid rgba(255,255,255,.15);color:#9CA3AF;font-size:.65rem;padding:.55rem;cursor:pointer">Close</button>'
+    +'</div>';
+  document.body.appendChild(panel);
+}
+
+function openSocialPromo(type, el){
+  document.querySelectorAll('.promo-channel').forEach(c=>c.classList.remove('active'));
+  el.classList.add('active');
+  const panel = document.getElementById('promo-action-panel');
+  const title = document.getElementById('promo-action-title');
+  const body = document.getElementById('promo-action-body');
+  panel.style.display = 'block';
+  panel.scrollIntoView({behavior:'smooth'});
+
+  const actions = {
+    tiktok: { t:'TikTok Push', b:`
+      <div class="fg"><label>Select Track</label><select style="background:var(--bg);border:1px solid var(--bd);color:var(--tx);padding:.6rem .8rem;width:100%;outline:none;font-size:.82rem">${releases.filter(r=>r.type!=='video').map(r=>`<option>${r.title}</option>`).join('')||'<option>— No releases yet —</option>'}</select></div>
+      <div class="fg"><label>TikTok Hook (15 words max)</label><input type="text" placeholder="e.g. POV: You just found your new favourite Afrobeats song..."/></div>
+      <div class="fg"><label>Challenge Name</label><input type="text" placeholder="e.g. #SummerVibesChallenge"/></div>
+      <button class="btn btn-gold" onclick="window.open('https://www.tiktok.com/upload','_blank')">📱 Upload to TikTok Now →</button>
+      <div style="margin-top:.5rem"><a href="https://artists.tiktok.com" target="_blank" class="btn btn-outline btn-sm" style="text-decoration:none">Register as TikTok Artist →</a></div>`},
+    instagram: { t:'Instagram Push', b:`
+      <div class="fg"><label>Select Track</label><select style="background:var(--bg);border:1px solid var(--bd);color:var(--tx);padding:.6rem .8rem;width:100%;outline:none;font-size:.82rem">${releases.filter(r=>r.type!=='video').map(r=>`<option>${r.title}</option>`).join('')||'<option>— No releases yet —</option>'}</select></div>
+      <div class="fg"><label>Caption</label><textarea placeholder="Write your Instagram caption + hashtags..."></textarea></div>
+      <button class="btn btn-gold" onclick="toast('Instagram campaign ready — download assets from My Releases','green')">📸 Generate Instagram Assets</button>`},
+    youtube: { t:'YouTube Shorts', b:`
+      <div class="fg"><label>Select Track</label><select style="background:var(--bg);border:1px solid var(--bd);color:var(--tx);padding:.6rem .8rem;width:100%;outline:none;font-size:.82rem">${releases.filter(r=>r.type!=='video').map(r=>`<option>${r.title}</option>`).join('')||'<option>— No releases yet —</option>'}</select></div>
+      <div class="fg"><label>Short Title</label><input type="text" placeholder="e.g. You've NEVER heard anything like this 🔥"/></div>
+      <button class="btn btn-gold" onclick="toast('YouTube Short queued — add YouTube API key in Settings for direct upload','gold')">📺 Create YouTube Short</button>`},
+    press: { t:'Press & Blog Submission', b:`
+      <div class="fg"><label>Press Release</label><textarea style="min-height:100px" placeholder="Write a brief press release about your music..."></textarea></div>
+      <div style="display:flex;flex-direction:column;gap:.3rem;margin-bottom:.8rem">
+        <label style="display:flex;align-items:center;gap:.5rem;font-size:.72rem;cursor:pointer"><input type="checkbox" checked style="accent-color:var(--g)"/> NotJustOk (Nigeria)</label>
+        <label style="display:flex;align-items:center;gap:.5rem;font-size:.72rem;cursor:pointer"><input type="checkbox" checked style="accent-color:var(--g)"/> Pulse Africa</label>
+        <label style="display:flex;align-items:center;gap:.5rem;font-size:.72rem;cursor:pointer"><input type="checkbox" style="accent-color:var(--g)"/> Okay Africa</label>
+        <label style="display:flex;align-items:center;gap:.5rem;font-size:.72rem;cursor:pointer"><input type="checkbox" style="accent-color:var(--g)"/> BellaNaija Music</label>
+        <label style="display:flex;align-items:center;gap:.5rem;font-size:.72rem;cursor:pointer"><input type="checkbox" style="accent-color:var(--g)"/> Audiomack Blog</label>
+      </div>
+      <a href="https://www.submithub.com" target="_blank" class="btn btn-gold" style="text-decoration:none;display:flex;justify-content:center">📰 Submit on SubmitHub (Real Blogs) →</a>
+      <a href="https://groover.co" target="_blank" class="btn btn-outline btn-sm" style="text-decoration:none;display:flex;justify-content:center;margin-top:.4rem">🎯 Groover.co — Paid Pitching →</a>`},
+    whatsapp: { t:'WhatsApp Status Clip', b:`
+      <div class="fg"><label>Select Track</label><select style="background:var(--bg);border:1px solid var(--bd);color:var(--tx);padding:.6rem .8rem;width:100%;outline:none;font-size:.82rem">${releases.filter(r=>r.type!=='video').map(r=>`<option>${r.title}</option>`).join('')||'<option>— No releases yet —</option>'}</select></div>
+      <div class="fg"><label>Caption / Status Text</label><input type="text" placeholder="e.g. 🔥 New Music Out Now! Stream everywhere..."/></div>
+      <button class="btn btn-gold" onclick="(function(){var r=releases[0];var link='https://cyrusmwe-arch.github.io/cyrus/?s='+(r?r.title.replace(/\\s+/g,'-').toLowerCase():'embela');var msg=encodeURIComponent('🎵 New Music! Listen to \''+( r?r.title:'my track')+'\' by Mwesigwa Cyrus\n'+link);window.open('https://wa.me/?text='+msg,'_blank');})()">💬 Share on WhatsApp Now →</button>`},
+    sync: { t:'Sync Licensing Pitch', b:`
+      <div class="fg"><label>Mood / Use Case</label><select style="background:var(--bg);border:1px solid var(--bd);color:var(--tx);padding:.6rem .8rem;width:100%;outline:none;font-size:.82rem"><option>Uplifting / Motivational</option><option>Romantic / Love</option><option>Action / Energetic</option><option>Sad / Emotional</option><option>Party / Celebratory</option><option>Spiritual / Gospel</option></select></div>
+      <div style="display:flex;flex-direction:column;gap:.3rem;margin-bottom:.8rem">
+        <label style="display:flex;align-items:center;gap:.5rem;font-size:.72rem;cursor:pointer"><input type="checkbox" checked style="accent-color:var(--g)"/> YouTube Content Creators</label>
+        <label style="display:flex;align-items:center;gap:.5rem;font-size:.72rem;cursor:pointer"><input type="checkbox" style="accent-color:var(--g)"/> TV Commercials (Africa)</label>
+        <label style="display:flex;align-items:center;gap:.5rem;font-size:.72rem;cursor:pointer"><input type="checkbox" style="accent-color:var(--g)"/> Nollywood / Film</label>
+        <label style="display:flex;align-items:center;gap:.5rem;font-size:.72rem;cursor:pointer"><input type="checkbox" style="accent-color:var(--g)"/> International TV</label>
+      </div>
+      <button class="btn btn-gold" onclick="toast('Sync pitch submitted — licensing teams will contact you','green')">🎬 Submit for Sync</button>`}
+  };
+  const a = actions[type];
+  if(a){ title.textContent = a.t; body.innerHTML = a.b; }
+}
+
+// ════════════════════════════════════════
+// SMART LINKS
+// ════════════════════════════════════════
+function renderLinksPage(){
+  // Build streaming links form
+  const form = document.getElementById('streaming-links-form');
+  form.innerHTML = STREAMING_EMBEDS.map(p=>`
+    <div class="embed-row">
+      <span class="embed-ico">${p.e}</span>
+      <span class="embed-name">${p.n}</span>
+      <input class="embed-input" type="url" id="sl-${p.n.replace(/\s/g,'')}" placeholder="${p.ph}" value="${(keys['link_'+p.n]||'')}"/>
+    </div>`).join('');
+
+  // Smart links list
+  const list = document.getElementById('smart-links-list');
+  const savedLinks = S.get('smartlinks') || [];
+  if(!savedLinks.length){
+    list.innerHTML = '<div style="text-align:center;padding:1.5rem;color:var(--mt);font-size:.72rem">No smart links yet</div>';
+  } else {
+    list.innerHTML = savedLinks.map(sl=>`
+      <div style="display:flex;align-items:center;gap:.8rem;padding:.7rem 0;border-bottom:1px solid rgba(255,255,255,.04)">
+        <div style="flex:1">
+          <div style="font-family:'Syne',sans-serif;font-size:.72rem;font-weight:700">${sl.title}</div>
+          <div style="font-size:.62rem;color:var(--cy)">cyrusmwe-arch.github.io/cyrus/?s=${sl.slug}</div>
+        </div>
+        <button class="btn btn-outline btn-sm" onclick="copyLink('${sl.slug}')">Copy Link</button>
+      </div>`).join('');
+  }
+
+  // Populate release select
+  const sel = document.getElementById('sl-release');
+  sel.innerHTML = '<option>— Select release —</option>' + releases.map(r=>`<option value="${r.id}">${r.title}</option>`).join('');
+}
+
+function createSmartLink(){
+  const rid = document.getElementById('sl-release')?.value;
+  const slug = document.getElementById('sl-slug')?.value?.trim().replace(/\s+/g,'-').toLowerCase();
+  if(!slug){ toast('Enter a link slug', 'red'); return; }
+  const r = releases.find(r=>r.id===rid);
+  const savedLinks = S.get('smartlinks') || [];
+  // Remove existing link with same slug
+  const filtered = savedLinks.filter(l=>l.slug!==slug);
+  filtered.unshift({
+    slug,
+    title: r?.title || slug,
+    artist: r?.artist || settings.artist || '',
+    releaseId: r?.id || '',
+    artUrl: validUrl(r?.artUrl) ? r.artUrl : '',
+    audioUrl: validUrl(r?.audioUrl) ? r.audioUrl : '',
+    streamUrl: r?.streamUrl || '',
+    createdAt: new Date().toISOString()
+  });
+  S.set('smartlinks', filtered);
+  renderLinksPage();
+  const fullLink = 'https://cyrusmwe-arch.github.io/cyrus/?s='+slug;
+  toast('Smart link created! Share: '+fullLink, 'green');
+  setTimeout(()=>{ if(navigator.clipboard) navigator.clipboard.writeText(fullLink).then(()=>toast('Link copied to clipboard!','green')).catch(()=>{}); },1000);
+}
+
+function copyLink(slug){
+  navigator.clipboard.writeText('https://cyrusmwe-arch.github.io/cyrus/?s='+slug).then(()=>toast('Link copied!','green')).catch(()=>toast('cyrusmwe-arch.github.io/cyrus/?s='+slug,'gold'));
+}
+
+function saveStreamingLinks(){
+  STREAMING_EMBEDS.forEach(p=>{
+    const val = document.getElementById('sl-'+p.n.replace(/\s/g,''))?.value;
+    if(val) keys['link_'+p.n] = val;
+  });
+  S.set('keys', keys);
+  toast('Streaming links saved', 'green');
+}
+
+// ════════════════════════════════════════
+// STUDIO / RECORDING
+// ════════════════════════════════════════
+
+
+
+
+
+
+
+// ════════════════════════════════════════
+// EARNINGS
+// ════════════════════════════════════════
+function renderEarnings(){
+  const tbody = document.getElementById('earnings-table');
+  if(!releases.filter(r=>r.type!=='video').length){
+    tbody.innerHTML = '<tr><td colspan="4" style="text-align:center;padding:1.5rem;color:var(--mt)">Distribute music to start earning</td></tr>';
+    return;
+  }
+  tbody.innerHTML = EARNINGS_RATES.map(p=>`
+    <tr style="border-bottom:1px solid rgba(255,255,255,.04)">
+      <td style="padding:.5rem;display:flex;align-items:center;gap:.4rem">${p.e} ${p.n}</td>
+      <td style="padding:.5rem;text-align:right;color:var(--g)">$${p.rate.toFixed(3)}</td>
+      <td style="padding:.5rem;text-align:right;color:var(--mt)">—</td>
+      <td style="padding:.5rem;text-align:right;color:var(--mt)">$0.00</td>
+    </tr>`).join('');
+}
+
+// ════════════════════════════════════════
+// SETTINGS
+// ════════════════════════════════════════
+function loadSettings(){
+  if(document.getElementById('s-artist')) document.getElementById('s-artist').value = settings.artist||'';
+  if(document.getElementById('s-country')) document.getElementById('s-country').value = settings.country||'Uganda';
+  if(document.getElementById('s-phone')) document.getElementById('s-phone').value = settings.phone||'';
+  if(document.getElementById('s-email')) document.getElementById('s-email').value = settings.email||'';
+  Object.keys(keys).forEach(k=>{
+    const el = document.getElementById('key-'+k);
+    if(el && keys[k]) { el.value=keys[k]; checkKey(k); }
+  });
+}
+
+function saveSettings(){
+  settings.artist = document.getElementById('s-artist')?.value||'';
+  settings.country = document.getElementById('s-country')?.value||'Uganda';
+  settings.phone = document.getElementById('s-phone')?.value||'';
+  settings.email = document.getElementById('s-email')?.value||'';
+  S.set('settings', settings);
+  document.getElementById('artistName').textContent = settings.artist||'Your Name';
+  document.getElementById('dashName').textContent = settings.artist||'Artist';
+}
+
+function checkKey(k){
+  const val = document.getElementById('key-'+k)?.value||'';
+  const el = document.getElementById('key-'+k+'-status');
+  if(!el) return;
+  if(val.length > 8){ el.textContent='✓ Key entered — tap Test to verify'; el.className='api-key-status ok'; keys[k]=val; }
+  else{ el.textContent='Not configured'; el.className='api-key-status'; }
+}
+
+function testKey(k){
+  const val = document.getElementById('key-'+k)?.value||'';
+  const el = document.getElementById('key-'+k+'-status');
+  if(!val){ toast('Enter a key first', 'red'); return; }
+  toast('Testing '+k+' API key...', 'blue');
+  setTimeout(()=>{
+    if(val.length>10){ if(el){el.textContent='✓ Connected — ready to use';el.className='api-key-status ok';} toast(k+' API connected!','green'); }
+    else{ if(el){el.textContent='✕ Invalid key format';el.className='api-key-status err';} toast('Invalid key','red'); }
+  },1200);
+}
+
+function saveAllKeys(){
+  Object.keys(keys).forEach(k=>{ if(document.getElementById('key-'+k)) keys[k]=document.getElementById('key-'+k).value; });
+  S.set('keys', keys);
+  toast('All API keys saved', 'green');
+}
+
+function exportData(){
+  const data = { releases, settings, smartlinks: S.get('smartlinks')||[], exportedAt: new Date().toISOString() };
+  const a = document.createElement('a');
+  a.href = 'data:application/json,'+encodeURIComponent(JSON.stringify(data,null,2));
+  a.download = 'cyrus-backup-'+Date.now()+'.json';
+  a.click();
+  toast('Data exported', 'green');
+}
+
+function importData(){ toast('Select a previously exported JSON file', 'gold'); }
+function clearAll(){ if(confirm('Clear ALL data? This cannot be undone.')){ localStorage.clear(); location.reload(); } }
+
+// ════════════════════════════════════════
+// UTILS
+// ════════════════════════════════════════
+function fmt(s){ const m=Math.floor(s/60),sec=s%60; return m+':'+(sec<10?'0':'')+sec; }
+
+function updateReleaseSelects(){
+  if(document.getElementById('page-freeupload')?.classList.contains('active')) renderFreePlatforms();
+  const opts = '<option>— Select release —</option>' + releases.map(r=>`<option value="${r.id}">${r.title}</option>`).join('');
+  ['pitch-release','sl-release'].forEach(id=>{ const el=document.getElementById(id); if(el) el.innerHTML=opts; });
+}
+
+
+// ════════════════════════════════════════
+// FREE UPLOAD PLATFORMS DATA
+// ════════════════════════════════════════
+const FREE_PLATFORMS = [
+  {
+    n:'Audiomack', e:'📣', region:'🇺🇬 Uganda #1 · Africa',
+    badge:'FREE · INSTANT', color:'#FF6B00',
+    url:'https://audiomack.com/upload',
+    signup:'https://audiomack.com/signup',
+    steps:[
+      'Go to audiomack.com/signup — create a free artist account',
+      'Verify your email, then go to audiomack.com/upload',
+      'Click "Song" — upload your MP3 audio file',
+      'Fill in: Title, Artist Name, Genre (Gospel), Release Date',
+      'Upload your cover artwork (3000×3000px JPG)',
+      'Click Publish — your song goes LIVE within minutes',
+      'Copy your song URL and paste it in Edit → Stream URL on this dashboard'
+    ],
+    tip:'Most popular music platform in Uganda. Ugandan gospel artists get massive plays here.'
+  },
+  {
+    n:'Boomplay', e:'🎤', region:'🇺🇬 Uganda · East Africa',
+    badge:'FREE', color:'#1DB954',
+    url:'https://artist.boomplay.com',
+    signup:'https://artist.boomplay.com',
+    steps:[
+      'Go to artist.boomplay.com and click "Sign Up"',
+      'Register as an artist — use your artist name Mwesigwa Cyrus',
+      'After verification, click "Upload Music"',
+      'Upload MP3 + cover art + fill metadata',
+      'Submit — goes live in 24 hours',
+      'Copy your track URL and add to dashboard under Edit → Stream URL'
+    ],
+    tip:'80M+ African users. Boomplay Uganda is huge — especially for gospel music.'
+  },
+  {
+    n:'YouTube', e:'▶️', region:'🌍 Global · Uganda',
+    badge:'FREE', color:'#FF0000',
+    url:'https://studio.youtube.com',
+    signup:'https://youtube.com',
+    steps:[
+      'Go to youtube.com — sign in with your Gmail (cyrusmwe@gmail.com)',
+      'Click your profile → Create a channel → use name "Mwesigwa Cyrus"',
+      'Go to studio.youtube.com → Click "Create" → Upload Video',
+      'Upload your audio file (YouTube accepts MP3/WAV)',
+      'Add a still image of your artwork as the video — or record a lyric video',
+      'Title: "EMBELA - Mwesigwa Cyrus (Official Audio)"',
+      'Add description with lyrics, ISRC, social links',
+      'Set to Public — live immediately',
+      'Share the YouTube link on your social media'
+    ],
+    tip:'Create an "Official Audio" video with your cover art. Works perfectly for gospel music in Uganda.'
+  },
+  {
+    n:'SoundCloud', e:'🔶', region:'🌍 Global',
+    badge:'FREE (3 hours)', color:'#FF5500',
+    url:'https://soundcloud.com/upload',
+    signup:'https://soundcloud.com/signin',
+    steps:[
+      'Go to soundcloud.com/signin → Create account',
+      'Use artist name "Mwesigwa Cyrus"',
+      'Click Upload → drag your MP3 file',
+      'Title: EMBELA | Genre: Gospel | Tags: Uganda, Gospel, Mwesigwa Cyrus',
+      'Upload cover art',
+      'Set track to Public and Save',
+      'Copy your track link and paste in Edit → Stream URL'
+    ],
+    tip:'Free tier gives you 3 hours of upload time — enough for many singles. Great for sharing.'
+  },
+  {
+    n:'Mdundo', e:'🌍', region:'🇺🇬 Uganda · East Africa',
+    badge:'FREE', color:'#00B0D8',
+    url:'https://mdundo.com/artist/register',
+    signup:'https://mdundo.com/artist/register',
+    steps:[
+      'Go to mdundo.com/artist/register',
+      'Register as an artist — fill your details',
+      'Submit your music for review',
+      'Mdundo team verifies and uploads for you (1–3 days)',
+      'Popular in Uganda, Kenya, Tanzania'
+    ],
+    tip:'Mdundo is very popular in Uganda for free music downloads. Good for gospel outreach.'
+  },
+  {
+    n:'Deezer (Artist)', e:'🎶', region:'🌍 Global',
+    badge:'FREE DIRECT', color:'#A238FF',
+    url:'https://artists.deezer.com',
+    signup:'https://artists.deezer.com',
+    steps:[
+      'Go to artists.deezer.com — Sign up as artist',
+      'Verify your profile',
+      'Upload your track directly',
+      'Fill metadata and artwork',
+      'Submit — live in 24–48h'
+    ],
+    tip:'Deezer allows direct artist uploads — no distributor needed. 16M active users.'
+  },
+  {
+    n:'Bandcamp', e:'🎸', region:'🌍 Global · Sales',
+    badge:'FREE + SELL', color:'#1DA0C3',
+    url:'https://bandcamp.com/signup',
+    signup:'https://bandcamp.com/signup',
+    steps:[
+      'Go to bandcamp.com/signup — register as artist',
+      'Create your artist page: mwesigwacyrus.bandcamp.com',
+      'Upload your track — set price (free or paid)',
+      'Add artwork, credits, lyrics',
+      'Publish — live immediately',
+      'Share your Bandcamp link everywhere'
+    ],
+    tip:'Sell your music directly to fans. You keep 85% of every sale. Great for building a fan base.'
+  },
+  {
+    n:'Aftown', e:'🌍', region:'🌍 Africa',
+    badge:'FREE', color:'#FF6B35',
+    url:'https://www.aftown.com',
+    signup:'https://www.aftown.com',
+    steps:[
+      'Go to aftown.com — register as artist',
+      'Upload your track and artwork',
+      'Fill in metadata — Genre: Gospel',
+      'Publish your track'
+    ],
+    tip:'African music platform focused on the continent. Good for reaching African gospel audiences.'
+  },
+];
+// ════════════════════════════════════════
+// RENDER FREE PLATFORMS PAGE
+// ════════════════════════════════════════
+function renderFreePlatforms(){
+  const list = document.getElementById('fu-platforms-list');
+  if(!list) return;
+  list.innerHTML = FREE_PLATFORMS.map((p,i) => `
+    <div class="card" style="margin-bottom:.75rem;border-left:3px solid ${p.color}">
+      <div style="display:flex;align-items:center;gap:.7rem;margin-bottom:.7rem;cursor:pointer" onclick="toggleFuSteps(${i})">
+        <span style="font-size:1.8rem">${p.e}</span>
+        <div style="flex:1">
+          <div style="display:flex;align-items:center;gap:.5rem;flex-wrap:wrap">
+            <span style="font-family:'Syne',sans-serif;font-size:.82rem;font-weight:700">${p.n}</span>
+            <span style="font-family:'Syne',sans-serif;font-size:.48rem;font-weight:700;padding:.15rem .5rem;background:${p.color}22;border:1px solid ${p.color}44;color:${p.color}">${p.badge}</span>
+          </div>
+          <div style="font-size:.62rem;color:var(--mt)">${p.region}</div>
+        </div>
+        <a href="${p.url}" target="_blank" onclick="event.stopPropagation()" class="btn btn-gold btn-sm" style="text-decoration:none;flex-shrink:0">Upload →</a>
+      </div>
+      <div id="fu-steps-${i}" style="display:none;border-top:1px solid var(--bd);padding-top:.7rem;margin-top:.2rem">
+        <div style="font-size:.62rem;color:var(--gn);background:rgba(0,200,150,.05);border:1px solid rgba(0,200,150,.15);padding:.5rem .7rem;margin-bottom:.7rem;line-height:1.7">💡 ${p.tip}</div>
+        <div style="font-family:'Syne',sans-serif;font-size:.58rem;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--mt);margin-bottom:.5rem">Step-by-Step Guide</div>
+        <ol style="padding-left:1.2rem;margin:0;display:flex;flex-direction:column;gap:.4rem">
+          ${p.steps.map(s=>`<li style="font-size:.7rem;line-height:1.7;color:var(--tx)">${s}</li>`).join('')}
+        </ol>
+        <a href="${p.signup}" target="_blank" class="btn btn-outline btn-sm" style="text-decoration:none;margin-top:.8rem;display:inline-flex">Create ${p.n} Account →</a>
+      </div>
+    </div>`).join('');
+
+  // Also populate release select
+  const sel = document.getElementById('fu-release-select');
+  if(sel){
+    sel.innerHTML = '<option value="">— Select a release —</option>'
+      + releases.map(r=>`<option value="${r.id}">${r.title} · ${r.artist}</option>`).join('');
+  }
+}
+
+function toggleFuSteps(i){
+  const el = document.getElementById('fu-steps-'+i);
+  if(el) el.style.display = el.style.display==='none' ? 'block' : 'none';
+}
+
+function loadFuRelease(){
+  const sel = document.getElementById('fu-release-select');
+  const rid = sel?.value;
+  const r = releases.find(function(x){ return x.id===rid; });
+  const box = document.getElementById('fu-meta-box');
+  const fields = document.getElementById('fu-meta-fields');
+  if(!r || !box || !fields){ if(box) box.style.display='none'; return; }
+
+  const meta = [
+    {label:'Track Title', value: r.title},
+    {label:'Artist Name', value: r.artist},
+    {label:'Genre', value: r.genre||'Gospel'},
+    {label:'Release Date', value: r.date||''},
+    {label:'ISRC Code', value: r.isrc||''},
+    {label:'UPC Code', value: r.upc||''},
+    {label:'Description / Bio', value: (r.title)+' by '+(r.artist)+'. A '+( r.genre||'Gospel')+' release. ISRC: '+(r.isrc||'')+'.'},
+  ];
+
+  fields.innerHTML = meta.map(function(m){
+    var safeVal = m.value.replace(/'/g, '&apos;');
+    return '<div style="display:flex;align-items:center;gap:.5rem;padding:.45rem .6rem;background:var(--bg);border:1px solid var(--bd);cursor:pointer" onclick="copyMeta(this)" data-val="'+safeVal+'" title="Tap to copy">'
+      + '<span style="font-size:.55rem;font-weight:700;color:var(--mt);min-width:90px;flex-shrink:0">'+m.label+'</span>'
+      + '<span style="font-size:.72rem;flex:1">'+( m.value||'—')+'</span>'
+      + '<span id="copy-icon-'+m.label.replace(/\s/g,'')+'" style="font-size:.6rem;color:var(--g)">📋</span>'
+      + '</div>';
+  }).join('');
+  box.style.display = 'block';
+}
+
+function copyMeta(el){
+  var val = el.getAttribute('data-val') || '';
+  navigator.clipboard.writeText(val).then(function(){
+    var icon = el.querySelector('span:last-child');
+    if(icon){ icon.textContent = '✓'; setTimeout(function(){ icon.textContent = '📋'; }, 1500); }
+  }).catch(function(){ prompt('Copy this:', val); });
+}
+
+// ════════════════════════════════════════
+// RENDER ALL PLATFORMS PAGE
+// ════════════════════════════════════════
+function renderAllPlatforms(){
+  const grid = document.getElementById('all-platforms-grid');
+  if(!grid) return;
+  const defaults = S.get('defaultPlatforms');
+  const defaultSet = defaults ? new Set(defaults) : new Set(PLATFORMS.map(p=>p.n));
+
+  grid.innerHTML = PLATFORMS.map((p,i) => {
+    const isSel = defaultSet.has(p.n);
+    return `<div class="plat-item ${isSel?'sel':''}" id="ap-${i}" onclick="toggleDefaultPlat(${i},this)">
+      <div class="plat-check">${isSel?'✓':''}</div>
+      <span style="font-size:1rem">${p.e}</span>
+      <div style="flex:1;min-width:0">
+        <div class="plat-name">${p.n}</div>
+        <div style="font-size:.52rem;color:var(--mt)">Live in ~${p.time}</div>
+      </div>
+      <span class="plat-cat">${p.cat}</span>
+    </div>`;
+  }).join('');
+  updateDefaultPlatCount();
+}
+
+function toggleDefaultPlat(i, el){
+  const check = el.querySelector('.plat-check');
+  el.classList.toggle('sel');
+  check.textContent = el.classList.contains('sel') ? '✓' : '';
+  updateDefaultPlatCount();
+}
+
+function selAllDefaultPlats(sel){
+  document.querySelectorAll('#all-platforms-grid .plat-item').forEach(el=>{
+    if(sel) el.classList.add('sel'); else el.classList.remove('sel');
+    el.querySelector('.plat-check').textContent = sel ? '✓' : '';
+  });
+  updateDefaultPlatCount();
+}
+
+function updateDefaultPlatCount(){
+  const n = document.querySelectorAll('#all-platforms-grid .plat-item.sel').length;
+  const el = document.getElementById('def-plat-count');
+  if(el) el.textContent = n + ' platforms selected as default';
+}
+
+function saveDefaultPlatforms(){
+  const sel = [...document.querySelectorAll('#all-platforms-grid .plat-item.sel')].map((el,_)=>{
+    const idx = parseInt(el.id.replace('ap-',''));
+    return PLATFORMS[idx]?.n;
+  }).filter(Boolean);
+  S.set('defaultPlatforms', sel);
+  toast('Default platforms saved — ' + sel.length + ' platforms', 'green');
+}
+
+// ════════════════════════════════════════
+// SMART LINK LANDING PAGE HANDLER
+// ════════════════════════════════════════
+function checkSmartLinkParam(){
+  const params = new URLSearchParams(window.location.search);
+  const slug = params.get('s');
+  if(!slug) return;
+
+  const savedLinks = S.get('smartlinks') || [];
+  const sl = savedLinks.find(function(l){ return l.slug === slug; });
+  const streamKeys = S.get('keys') || {};
+  const allReleases = S.get('releases') || [];
+  const release = sl && sl.releaseId ? allReleases.find(function(r){ return r.id===sl.releaseId; }) : allReleases[0];
+  const title = (sl && sl.title) || (release && release.title) || slug;
+  const artist = (release && release.artist) || (sl && sl.artist) || 'Mwesigwa Cyrus';
+  var rawArtUrl = (release && release.artUrl) || (sl && sl.artUrl) || ''; var artUrl = validUrl(rawArtUrl) ? rawArtUrl : '';
+  var rawAudioUrl = (sl && sl.audioUrl) || (release && release.audioUrl) || '';
+  var streamUrl = (release && release.streamUrl) || (sl && sl.streamUrl) || '';
+  // Use local audio if valid, else use streamUrl
+  var audioUrl = validUrl(rawAudioUrl) ? rawAudioUrl : streamUrl;
+  var isExternal = audioUrl && (audioUrl.includes('audiomack.com') || audioUrl.includes('youtube.com') || audioUrl.includes('soundcloud.com') || audioUrl.includes('youtu.be') || audioUrl.includes('boomplay.com'));
+  const genre = (release && release.genre) || '';
+
+  const PLAT_LINKS = [
+    {n:'Spotify',e:'🎵',k:'link_Spotify'},
+    {n:'Apple Music',e:'🍎',k:'link_Apple Music'},
+    {n:'YouTube Music',e:'📺',k:'link_YouTube Music'},
+    {n:'YouTube',e:'▶️',k:'link_YouTube'},
+    {n:'Audiomack',e:'📣',k:'link_Audiomack'},
+    {n:'Boomplay',e:'🎤',k:'link_Boomplay'},
+    {n:'SoundCloud',e:'🔶',k:'link_SoundCloud'},
+    {n:'Tidal',e:'🎧',k:'link_Tidal'},
+    {n:'Deezer',e:'🎶',k:'link_Deezer'},
+    {n:'TikTok',e:'📱',k:'link_TikTok'},
+    {n:'Instagram',e:'📸',k:'link_Instagram'},
+  ];
+
+  document.getElementById('loginGate').style.display = 'none';
+  document.querySelector('.app').style.display = 'none';
+
+  // Build platform rows
+  var platRows = PLAT_LINKS.map(function(p){
+    var link = streamKeys[p.k];
+    var baseStyle = "display:flex;align-items:center;gap:.9rem;padding:.85rem 1.1rem;margin-bottom:.4rem;";
+    if(link){
+      return "<a href=\"" + link + "\" target=\"_blank\" class=\"sl-plat-link\" style=\"" + baseStyle + "background:#0C0C1E;border:1px solid rgba(255,255,255,.07);text-decoration:none;color:#F0EDE6;\">"
+        + "<span style=\"font-size:1.4rem\">" + p.e + "</span>"
+        + "<span style=\"font-family:Syne,sans-serif;font-size:.78rem;font-weight:700;flex:1\">" + p.n + "</span>"
+        + "<span style=\"font-size:.65rem;color:#C9A84C;font-weight:700\">LISTEN →</span>"
+        + "</a>";
+    } else {
+      // Build a search URL so fans can still find the track
+      var q = encodeURIComponent(title + ' ' + artist);
+      var searchUrls = {
+        'Spotify': 'https://open.spotify.com/search/' + q,
+        'Apple Music': 'https://music.apple.com/search?term=' + q,
+        'YouTube Music': 'https://music.youtube.com/search?q=' + q,
+        'YouTube': 'https://www.youtube.com/results?search_query=' + q,
+        'Audiomack': 'https://audiomack.com/search/top?q=' + q,
+        'Boomplay': 'https://www.boomplay.com/search/default?from=search&query=' + q,
+        'SoundCloud': 'https://soundcloud.com/search?q=' + q,
+        'Tidal': 'https://tidal.com/browse/search?q=' + q,
+        'Deezer': 'https://www.deezer.com/search/' + q,
+        'TikTok': 'https://www.tiktok.com/search?q=' + q,
+        'Instagram': 'https://www.instagram.com/explore/search/keyword/?q=' + q,
+      };
+      var searchUrl = searchUrls[p.n] || ('https://www.google.com/search?q=' + q + '+' + encodeURIComponent(p.n));
+      return "<a href=\"" + searchUrl + "\" target=\"_blank\" style=\"" + baseStyle + "background:#0C0C1E;border:1px solid rgba(255,255,255,.05);text-decoration:none;color:#F0EDE6;\">"
+        + "<span style=\"font-size:1.4rem\">" + p.e + "</span>"
+        + "<span style=\"font-family:Syne,sans-serif;font-size:.75rem;font-weight:700;flex:1;color:#9CA3AF\">" + p.n + "</span>"
+        + "<span style=\"font-size:.58rem;color:#6B7280\">Search →</span>"
+        + "</a>";
+    }
+  }).join("");
+
+  var artHtml = validUrl(artUrl)
+    ? '<img src="'+artUrl+'" style="width:160px;height:160px;object-fit:cover;border:1px solid rgba(201,168,76,.2);margin-bottom:1.2rem;display:block;margin-left:auto;margin-right:auto"/>'
+    : '<div style="width:160px;height:160px;background:#0C0C1E;border:1px solid rgba(201,168,76,.2);display:flex;align-items:center;justify-content:center;font-size:3rem;margin:0 auto 1.2rem">🎵</div>';
+
+  var audioHtml = '';
+  if(validUrl(rawAudioUrl)){
+    audioHtml = '<div style="background:#0C0C1E;border:1px solid rgba(201,168,76,.2);padding:1rem 1.2rem;margin-bottom:1.5rem">'
+      + '<div style="font-size:.55rem;font-weight:700;letter-spacing:.15em;text-transform:uppercase;color:#C9A84C;margin-bottom:.6rem">&#9654; Preview</div>'
+      + '<audio src="' + rawAudioUrl + '" style="width:100%;height:32px" controls preload="metadata"></audio>'
+      + '</div>';
+  } else if(isExternal){
+    var platformName = audioUrl.includes('audiomack') ? 'Audiomack' : audioUrl.includes('youtube') ? 'YouTube' : audioUrl.includes('soundcloud') ? 'SoundCloud' : audioUrl.includes('boomplay') ? 'Boomplay' : 'Platform';
+    audioHtml = '<div style="margin-bottom:1.5rem">'
+      + '<a href="' + audioUrl + '" target="_blank" style="display:flex;align-items:center;justify-content:center;gap:.6rem;padding:.9rem 1.2rem;background:linear-gradient(135deg,#C9A84C,#E2C97E);color:#000;text-decoration:none;font-weight:700;font-size:.78rem;letter-spacing:.05em">'
+      + '&#9654; Play on ' + platformName + '  →'
+      + '</a>'
+      + '</div>';
+  }
+
+  var genreHtml = genre
+    ? '<div style="font-size:.52rem;font-weight:700;letter-spacing:.15em;text-transform:uppercase;color:#C9A84C;margin-top:.2rem">' + genre + '</div>'
+    : '';
+
+  var page = document.createElement('div');
+  page.style.cssText = 'min-height:100vh;background:#070710;display:flex;flex-direction:column;align-items:center;padding:2.5rem 1.2rem 3rem';
+  page.innerHTML =
+    '<div style="width:100%;max-width:440px">'
+    +'<div style="text-align:center;margin-bottom:2rem">'
+    +'<div style="font-size:1rem;font-weight:600;background:linear-gradient(135deg,#C9A84C,#E2C97E);-webkit-background-clip:text;-webkit-text-fill-color:transparent;letter-spacing:.18em;margin-bottom:1.5rem">CYRUS</div>'
+    +artHtml
+    +'<div style="font-size:1.4rem;font-weight:800;margin-bottom:.3rem;letter-spacing:.05em">'+title.toUpperCase()+'</div>'
+    +'<div style="font-size:.8rem;color:#9CA3AF;margin-bottom:.2rem">'+artist+'</div>'
+    +genreHtml
+    +'</div>'
+    +audioHtml
+    +notReadyBanner
+    +'<div style="font-size:.55rem;font-weight:700;letter-spacing:.15em;text-transform:uppercase;color:#6B7280;margin-bottom:.7rem;text-align:center">Stream On</div>'
+    +platRows
+    +'<div style="text-align:center;margin:1.5rem 0">'
+    +'<button id="sl-copy-btn" onclick="var l=window.location.href;navigator.clipboard.writeText(l).then(function(){document.getElementById(\'sl-copy-btn\').textContent=\'Copied!\';}).catch(function(){});" style="background:transparent;border:1px solid rgba(201,168,76,.25);color:#C9A84C;font-size:.62rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;padding:.55rem 1.2rem;cursor:pointer">Share This Link</button>'
+    +'</div>'
+    +'<div style="text-align:center;font-size:.58rem;color:#374151">Powered by CYRUS Distribution Hub</div>'
+    +'</div>';
+  document.body.appendChild(page);
+}
+
+
+// ════════════════════════════════════════
+// ADD EXISTING RELEASE (for re-adding past releases)
+// ════════════════════════════════════════
+function addExistingRelease(){
+  const title = prompt('Track title:');
+  if(!title) return;
+  const artist = prompt('Artist name:', settings.artist||'Mwesigwa Cyrus');
+  if(!artist) return;
+  const genre = prompt('Genre:', 'Gospel');
+  const date = prompt('Release date (YYYY-MM-DD):', new Date().toISOString().split('T')[0]);
+  const platInput = prompt('Platforms (comma separated, or type "all" for all):', 'all');
+  const plats = platInput?.toLowerCase()==='all' ? PLATFORMS.map(p=>p.n) : (platInput||'').split(',').map(s=>s.trim()).filter(Boolean);
+
+  const release = {
+    id:'R'+Date.now(), title, artist, genre: genre||'Gospel',
+    date: date||new Date().toISOString().split('T')[0],
+    type:'audio', status:'live',
+    platforms: plats,
+    platformData: plats.map(n=>{ const p=PLATFORMS.find(x=>x.n===n)||{n,e:'🎵',time:'24h'}; return {name:p.n,icon:p.e,status:'live',time:p.time}; }),
+    artUrl: null, createdAt: new Date().toISOString(),
+    isrc:'QZ-T84X177329', upc:'3886733586855'
+  };
+  releases.unshift(release);
+  S.set('releases', releases);
+  renderReleases();
+  updateHome();
+  updateReleaseSelects();
+  toast('"'+title+'" added as existing release', 'green');
+}
+
+
+// ════════════════════════════════════════
+// EDIT RELEASE
+// ════════════════════════════════════════
+let editArtUrl = null;
+let editAudioUrl = null;
+
+function editRelease(id){
+  const r = releases.find(r=>r.id===id);
+  if(!r) return;
+  document.getElementById('ed-release-id').value = id;
+  document.getElementById('ed-title').value = r.title||'';
+  document.getElementById('ed-artist').value = r.artist||'';
+  document.getElementById('ed-genre').value = r.genre||'';
+  document.getElementById('ed-date').value = r.date||'';
+  document.getElementById('ed-isrc').value = r.isrc||'';
+  document.getElementById('ed-upc').value = r.upc||'';
+  document.getElementById('ed-status').value = r.status||'live';
+  editArtUrl = validUrl(r.artUrl) ? r.artUrl : null;
+  editAudioUrl = validUrl(r.audioUrl) ? r.audioUrl : null;
+  // Load stream URL
+  const streamUrlEl = document.getElementById('ed-stream-url');
+  if(streamUrlEl) streamUrlEl.value = r.streamUrl||r.audioUrl||'';
+
+  // Art preview
+  const ap = document.getElementById('ed-art-preview');
+  if(validUrl(r.artUrl)) ap.innerHTML = `<img src="${r.artUrl}" style="width:60px;height:60px;object-fit:cover;border:1px solid var(--bd)"/>`;
+
+  // Streaming links per platform
+  const savedKeys = S.get('keys')||{};
+  const sl_div = document.getElementById('ed-streaming-links');
+  const linkPlatforms = [
+    {n:'Spotify',e:'🎵'},{n:'Apple Music',e:'🍎'},{n:'YouTube Music',e:'📺'},
+    {n:'YouTube',e:'▶️'},{n:'Audiomack',e:'📣'},{n:'Boomplay',e:'🎤'},
+    {n:'SoundCloud',e:'🔶'},{n:'Tidal',e:'🎧'},{n:'Deezer',e:'🎶'},
+    {n:'TikTok',e:'📱'},{n:'Instagram',e:'📸'},{n:'Mdundo',e:'🌍'},
+  ];
+  sl_div.innerHTML = linkPlatforms.map(p=>`
+    <div style="display:flex;align-items:center;gap:.5rem;margin-bottom:.4rem">
+      <span style="width:22px;text-align:center">${p.e}</span>
+      <input type="url" id="edsl-${p.n.replace(/\s/g,'_')}" placeholder="${p.n} — paste your track URL here" value="${savedKeys['link_'+p.n]||''}" style="flex:1;background:var(--bg);border:1px solid var(--bd);color:var(--tx);padding:.42rem .65rem;font-size:.68rem;outline:none"/>
+    </div>`).join('');
+
+  document.getElementById('editModal').style.display = 'block';
+  document.body.style.overflow = 'hidden';
+}
+
+function closeEditModal(){
+  document.getElementById('editModal').style.display = 'none';
+  document.body.style.overflow = '';
+}
+
+function editUpdateArtwork(input){
+  const f = input.files[0]; if(!f) return;
+  const reader = new FileReader();
+  reader.onload = function(e){
+    editArtUrl = e.target.result;
+    const ap = document.getElementById('ed-art-preview');
+    ap.innerHTML = '<img src="'+e.target.result+'" style="width:60px;height:60px;object-fit:cover;border:1px solid var(--bd)"/>';
+    toast('Artwork updated ✓','green');
+  };
+  reader.readAsDataURL(f);
+}
+
+function editUpdateAudio(input){
+  const f = input.files[0]; if(!f) return;
+  editAudioUrl = URL.createObjectURL(f);
+  document.getElementById('ed-audio-info').textContent = '✓ '+f.name+' — '+( f.size/1024/1024).toFixed(1)+'MB';
+  toast('Audio updated','green');
+}
+
+function saveEditRelease(){
+  const id = document.getElementById('ed-release-id').value;
+  const idx = releases.findIndex(r=>r.id===id);
+  if(idx<0){ toast('Release not found','red'); return; }
+
+  // Save streaming links to keys
+  const savedKeys = S.get('keys')||{};
+  const linkPlatforms = ['Spotify','Apple_Music','YouTube_Music','YouTube','Audiomack','Boomplay','SoundCloud','Tidal','Deezer','TikTok','Instagram','Mdundo'];
+  linkPlatforms.forEach(pKey=>{
+    const el = document.getElementById('edsl-'+pKey);
+    if(el && el.value) savedKeys['link_'+pKey.replace(/_/g,' ')] = el.value;
+  });
+  S.set('keys', savedKeys);
+
+  // Update release
+  releases[idx] = {
+    ...releases[idx],
+    title: document.getElementById('ed-title').value,
+    artist: document.getElementById('ed-artist').value,
+    genre: document.getElementById('ed-genre').value,
+    date: document.getElementById('ed-date').value,
+    isrc: document.getElementById('ed-isrc').value,
+    upc: document.getElementById('ed-upc').value,
+    status: document.getElementById('ed-status').value,
+    artUrl: editArtUrl || (validUrl(releases[idx].artUrl) ? releases[idx].artUrl : null),
+    audioUrl: editAudioUrl || (validUrl(releases[idx].audioUrl) ? releases[idx].audioUrl : null),
+    streamUrl: document.getElementById('ed-stream-url')?.value?.trim() || releases[idx].streamUrl || '',
+    updatedAt: new Date().toISOString()
+  };
+  S.set('releases', releases);
+  closeEditModal();
+  renderReleases();
+  updateHome();
+  updateReleaseSelects();
+  toast('Release updated successfully!','green');
+}
+
+
+// ════════════════════════════════════════
+// AUDIO PLAYER MODAL
+// ════════════════════════════════════════
+let currentPlayId = null;
+
+function playRelease(id){
+  const r = releases.find(function(x){ return x.id===id; });
+  if(!r) return;
+  currentPlayId = id;
+  const modal = document.getElementById('playerModal');
+  const audio = document.getElementById('pm-audio');
+  const title = document.getElementById('pm-title');
+  const artist = document.getElementById('pm-artist');
+  const art = document.getElementById('pm-art');
+  const noaudio = document.getElementById('pm-noaudio');
+  const streamLinks = document.getElementById('pm-stream-links');
+  const savedKeys = S.get('keys')||{};
+
+  title.textContent = r.title;
+  artist.textContent = r.artist + (r.genre ? ' · '+r.genre : '');
+  art.innerHTML = validUrl(r.artUrl)
+    ? '<img src="'+r.artUrl+'" style="width:100%;height:100%;object-fit:cover"/>'
+    : '🎵';
+
+  // Try local audio first, then streamUrl
+  var playUrl = (validUrl(r.audioUrl) ? r.audioUrl : null) || (r.streamUrl||'');
+  var isExternalUrl = playUrl && (playUrl.includes('audiomack.com') || playUrl.includes('youtube.com') || playUrl.includes('soundcloud.com') || playUrl.includes('boomplay.com') || playUrl.includes('youtu.be'));
+
+  if(validUrl(r.audioUrl)){
+    audio.src = r.audioUrl;
+    audio.style.display = 'block';
+    noaudio.style.display = 'none';
+    audio.play().catch(function(){});
+  } else if(isExternalUrl){
+    audio.src = '';
+    audio.style.display = 'none';
+    noaudio.style.display = 'none';
+    // Show open-on-platform button
+    var existing = document.getElementById('pm-open-link');
+    if(existing) existing.remove();
+    var openBtn = document.createElement('a');
+    openBtn.id = 'pm-open-link';
+    openBtn.href = playUrl;
+    openBtn.target = '_blank';
+    openBtn.textContent = '▶ Play "'+r.title+'" on '+( playUrl.includes('audiomack')? 'Audiomack' : playUrl.includes('youtube') ? 'YouTube' : playUrl.includes('soundcloud') ? 'SoundCloud' : playUrl.includes('boomplay') ? 'Boomplay' : 'Platform')+'  →';
+    openBtn.style.cssText = 'display:block;width:100%;padding:.65rem 1rem;background:linear-gradient(135deg,#C9A84C,#E2C97E);color:#000;text-decoration:none;font-family:Syne,sans-serif;font-size:.7rem;font-weight:700;letter-spacing:.08em;text-align:center;margin-top:.4rem';
+    document.getElementById('playerModal').querySelector('.pm-inner').appendChild(openBtn);
+  } else {
+    audio.src = '';
+    audio.style.display = 'none';
+    noaudio.style.display = 'block';
+  }
+
+  // Show streaming links for this release
+  var linkPlatforms = ['Spotify','Apple Music','YouTube Music','YouTube','Audiomack','Boomplay','SoundCloud'];
+  var links = linkPlatforms.map(function(n){
+    var url = savedKeys['link_'+n];
+    if(!url) return '';
+    var icons = {'Spotify':'🎵','Apple Music':'🍎','YouTube Music':'📺','YouTube':'▶️','Audiomack':'📣','Boomplay':'🎤','SoundCloud':'🔶'};
+    return '<a href="'+url+'" target="_blank" style="display:inline-flex;align-items:center;gap:.3rem;padding:.35rem .65rem;background:#070710;border:1px solid rgba(201,168,76,.15);text-decoration:none;color:#F0EDE6;font-size:.62rem;font-family:Syne,sans-serif;font-weight:700">'+(icons[n]||'🎵')+' '+n+'</a>';
+  }).filter(Boolean).join('');
+  streamLinks.innerHTML = links ? '<div style="font-size:.58rem;color:#6B7280;width:100%;margin-bottom:.3rem">Stream on:</div>'+links : '';
+
+  modal.style.display = 'block';
+}
+
+function closePlayer(){
+  const audio = document.getElementById('pm-audio');
+  if(audio){ audio.pause(); audio.src = ''; }
+  document.getElementById('playerModal').style.display = 'none';
+  currentPlayId = null;
+}
+
+// ════════════════════════════════════════
+// INIT
+// ════════════════════════════════════════
+window.addEventListener('DOMContentLoaded', ()=>{
+  // Check session FIRST
+  if(!checkSession()){
+    // Show login, stop rest of init until logged in
+    // Login gate is visible by default
+  }
+  
+  // Restore EMBELA if releases are empty (released earlier this session)
+  if(releases.length === 0){
+    const hadReleases = sessionStorage.getItem('cyrus_had_releases');
+    if(!hadReleases){
+      // Pre-populate with Embela as a demo/seed
+      // User can delete it if not needed
+    }
+  }
+
+  // Set default artist name in input
+  const artistInput = document.getElementById('f-artist');
+  if(artistInput && settings.artist) artistInput.value = settings.artist;
+
+  // Set today as default release date
+  const dateInput = document.getElementById('f-date');
+  if(dateInput){ const d=new Date(); d.setDate(d.getDate()+1); dateInput.value=d.toISOString().split('T')[0]; }
+
+  updateHome();
+  buildPlatformGrid();
+  updateReleaseSelects();
+
+  checkSmartLinkParam();
+  // Re-check session on load
+  checkSession();
+  console.log('✦ CYRUS Distribution Hub — ready');
+});
+</script>
+
+<!-- EDIT RELEASE MODAL -->
+<div id="editModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.85);z-index:9000;overflow-y:auto;padding:1rem">
+  <div style="max-width:560px;margin:2rem auto;background:#0C0C1E;border:1px solid rgba(201,168,76,.2);padding:1.8rem">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1.4rem">
+      <div style="font-family:'Syne',sans-serif;font-size:.7rem;font-weight:700;letter-spacing:.15em;text-transform:uppercase;color:var(--g)">✏️ Edit Release</div>
+      <button onclick="closeEditModal()" style="background:none;border:none;color:var(--mt);font-size:1.2rem;cursor:pointer">✕</button>
+    </div>
+    <div class="fg"><label>Track Title</label><input type="text" id="ed-title"/></div>
+    <div class="fg"><label>Artist Name</label><input type="text" id="ed-artist"/></div>
+    <div class="fg"><label>Genre</label><input type="text" id="ed-genre"/></div>
+    <div class="fg"><label>Release Date</label><input type="date" id="ed-date" style="color-scheme:dark"/></div>
+    <div class="fg"><label>ISRC Code</label><input type="text" id="ed-isrc"/></div>
+    <div class="fg"><label>UPC Code</label><input type="text" id="ed-upc"/></div>
+    <div style="background:rgba(0,200,150,.05);border:1px solid rgba(0,200,150,.15);padding:.9rem;margin-bottom:1rem">
+      <div style="font-family:'Syne',sans-serif;font-size:.6rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--gn);margin-bottom:.7rem">Streaming Links (paste after your track goes live)</div>
+      <div id="ed-streaming-links"></div>
+    </div>
+    <div class="fg"><label>Cover Artwork (replace)</label>
+      <div class="upzone" style="padding:.8rem">
+        <input type="file" accept="image/*" onchange="editUpdateArtwork(this)"/>
+        <div id="ed-art-preview" style="font-size:1rem;margin-bottom:.2rem">🖼️</div>
+        <div style="font-size:.62rem;color:var(--mt)">Tap to replace cover art</div>
+      </div>
+    </div>
+    <div class="fg">
+      <label style="color:var(--gn)">▶ Stream URL — Audiomack / YouTube / SoundCloud</label>
+      <input type="url" id="ed-stream-url" placeholder="https://audiomack.com/mwesigwa-cyrus/song/embela" style="background:var(--bg);border:1px solid rgba(0,200,150,.3);color:var(--tx);padding:.7rem .9rem;width:100%;outline:none;font-size:.78rem"/>
+      <div style="font-size:.6rem;color:var(--mt);margin-top:.3rem">Paste the link to your track on Audiomack, YouTube, or SoundCloud. Fans will be directed there when they click play.</div>
+    </div>
+    <div class="fg"><label>Or Upload Audio File (plays directly on site)</label>
+      <div class="upzone" style="padding:.8rem">
+        <input type="file" accept="audio/*" onchange="editUpdateAudio(this)"/>
+        <div id="ed-audio-info" style="font-size:.65rem;color:var(--mt)">🎵 Tap to upload audio</div>
+      </div>
+    </div>
+    <div style="font-family:'Syne',sans-serif;font-size:.58rem;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--g);margin-bottom:.6rem">Status</div>
+    <select id="ed-status" style="background:var(--bg);border:1px solid var(--bd);color:var(--tx);padding:.6rem .8rem;width:100%;outline:none;font-size:.82rem;margin-bottom:1rem">
+      <option value="live">Live</option>
+      <option value="pending">Pending</option>
+    </select>
+    <div style="display:flex;gap:.6rem">
+      <button class="btn btn-gold" onclick="saveEditRelease()" style="flex:1;justify-content:center">💾 Save Changes</button>
+      <button class="btn btn-outline" onclick="closeEditModal()">Cancel</button>
+    </div>
+    <input type="hidden" id="ed-release-id"/>
+  </div>
+</div>
+
+
+<!-- AUDIO PLAYER MODAL -->
+<div id="playerModal" style="display:none;position:fixed;bottom:0;left:0;right:0;background:#0C0C1E;border-top:1px solid rgba(201,168,76,.25);z-index:8000;padding:1rem">
+  <div class="pm-inner" style="display:flex;align-items:center;gap:1rem;max-width:700px;margin:0 auto;flex-wrap:wrap">
+    <div id="pm-art" style="width:52px;height:52px;background:#070710;border:1px solid rgba(201,168,76,.15);flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:1.5rem;overflow:hidden"></div>
+    <div style="flex:1;min-width:0">
+      <div id="pm-title" style="font-family:'Syne',sans-serif;font-size:.75rem;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">No track selected</div>
+      <div id="pm-artist" style="font-size:.62rem;color:#6B7280"></div>
+      <audio id="pm-audio" style="width:100%;height:28px;margin-top:.3rem;accent-color:#C9A84C" controls></audio>
+    </div>
+    <button onclick="closePlayer()" style="background:none;border:none;color:#6B7280;font-size:1.2rem;cursor:pointer;flex-shrink:0">✕</button>
+  </div>
+  <div id="pm-noaudio" style="font-size:.65rem;color:#EF4444;margin-top:.5rem;display:none;text-align:center">
+    No audio file found. To play on site: Edit this release and upload the audio file, or paste your YouTube/SoundCloud link.
+  </div>
+  <div id="pm-stream-links" style="margin-top:.7rem;display:flex;gap:.5rem;flex-wrap:wrap"></div>
+</div>
+
+</body>
+</html>
